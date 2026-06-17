@@ -2,83 +2,77 @@
 
 ## What this is
 
-The **.NET / C#** port of the Universal WASM Loader. Its job is to load a WebAssembly module from a
-.NET host and expose its WIT-described exports as ordinary, type-safe .NET methods — numbers pass
-through directly, strings and aggregates are marshalled across the WASM Canonical ABI. It is the
-.NET sibling of the reference JS/TS loader (`universalWasmLoader`) and must conform to the
-cross-language `SPEC.md`.
+The **.NET / C#** port of the Universal WASM Loader. It loads a `.wasm` library (the reactor/library
+shape `wasmtk modc` produces), reads its WIT-described interface, and exposes each export as a
+type-safe .NET method with Canonical-ABI marshalling handled for the caller (numbers direct, strings
+encoded/decoded through linear memory, booleans normalized). No `.wit` → raw exports. Sibling of the
+reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-language `SPEC.md`.
 
-## Maturity — EARLY STUB (as of 2026-06-15)
+- **Language / runtime:** C# on .NET, built on **Wasmtime** (NuGet `Wasmtime`, the Bytecode Alliance
+  wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
+- **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`).
 
-This repo is a skeleton, **not** an implemented loader. Present files:
+## Runtime decision — Wasmtime (confirmed 2026-06-17)
 
-- `README.md` — one line ("Universal wasm loader for .Net")
-- `.gitignore` — standard .NET ignore (note: it lists `CLAUDE.md`; the cmem migration force-adds
-  `CLAUDE.md` so the archive is tracked)
-- `LICENSE` — MIT, Jon Marcum, 2026
-- `CLAUDE.md` — auto-loaded archive (now points at `cmem/`)
+**Wasmtime NuGet** (the intended/expected dep, now confirmed in `UniversalWasmLoader.csproj`:
+`<PackageReference Include="Wasmtime" Version="44.0.0" />`). Unlike Go — where a head-to-head
+benchmark flipped the choice from wasmtime-go to **pure-Go wazero** (~38× lower call overhead, no
+CGO) — **.NET has no production-grade pure-managed wasm runtime equivalent to wazero**, so the
+P/Invoke-based Wasmtime binding stands as the right choice (and gives WASI P1 for free, SPEC §10).
+Spiked here first (Wasmtime 44 restores + runs on win-x64; `add(3,4)=7`, env imports, full string ABI)
+before writing the port.
 
-There is **no `.csproj`, no `.cs` source, no test project** yet. Nothing has been published to NuGet.
+**Toolchain note (this machine):** the `dotnet` on PATH is the system-wide install — **runtime-only,
+no SDK**. The SDK is the scoop install of
+`dotnet-sdk` (**10.0.301**, runtime 10.0.9 only). So
+build/test must invoke the scoop `dotnet.exe`, and the test project targets **net10.0** (the only
+runtime the SDK sees). The library multi-targets **net8.0;net10.0** for consumers.
 
-## Language / runtime
+## Current state — IMPLEMENTED + SPEC-3.0.0 conformant (2026-06-17)
 
-- Language: **C#** on **.NET** (build/test/run via the standard `dotnet` CLI).
-- WASM runtime: **NOT yet chosen in-repo.** The intended/expected dependency is **wasmtime-dotnet**
-  (the .NET binding to Wasmtime, the same Bytecode Alliance engine family used across the ecosystem),
-  but this is **unconfirmed** — there is no `.csproj` or `PackageReference` to verify it against. A
-  future session adding the project file should record the actual chosen runtime here.
-- Package registry: **NuGet** (planned; nothing published yet).
+Fully implemented and passing the reference suite (was a pre-implementation stub). Source (namespace
+`UniversalWasmLoader`):
 
-## Public API surface — NOT YET IMPLEMENTED
+- `Wit.cs` — WIT parser (mirrors the JS `wit-parser.js`; `GeneratedRegex`, kebab→camel, s32 fallback).
+- `WasmModule.cs` — the `WasmModule` handle: `Call` / `Bind`, Canonical-ABI param encode (incl. string
+  via `cabi_realloc`) + result decode (incl. **callee-allocated string returns** — read the `[ptr,len]`
+  pair, decode, then call `cabi_post_<camel>`), `Dispose`. Args marshalled to `Wasmtime.ValueBox`.
+- `Loader.cs` — `Load` (sync, file) / `ImportAsync` (file or `http(s)` URL) / `CreateSingleton`; core
+  instantiation; **dynamic `env` host-import functions** (`Function.FromCallback(store, untyped, paramKinds,
+  resultKinds)` → decode `ValueBox` per WIT, `DynamicInvoke` the user delegate, encode result);
+  `@N` version pin; WASI-P1 (`linker.DefineWasi()` + inherited stdio) + `_initialize` (SPEC §10).
+- `Callbacks.cs` — `new Callbacks().On(camelName, Delegate)`.
+- `InstancePool.cs` — `BlockingCollection`-backed pool of N independent instances (`Acquire`/`Release`/
+  `Run`/`Size`/`Available`/`Dispose`).
 
-No types or methods exist yet. When implemented, this port should expose the idiomatic .NET
-equivalents of the reference loader's surface:
+### Public API
 
-- `wasmImport` → a singleton-style loader (e.g. `WasmLoader.Import(path, opts)` returning a typed
-  module handle), the default "DLL" pattern.
-- `createSingleton` → cached single-instance creation.
-- `InstancePool` → a pool of fresh instances for server/loop workloads (`Acquire`/`Release`/`Run`,
-  `Size`/`Available`/`Dispose`), mirroring the reference `InstancePool` contract.
+`Loader.Load(path, cbs?)` · `Loader.ImportAsync(src, cbs?)` · `Loader.CreateSingleton(path, cbs?)` ·
+`WasmModule.Call(name, params object?[])` → `object?` · `WasmModule.Bind(name)` · `WasmModule.Exports`
+· `WasmModule.Dispose()` · `new InstancePool(path, size, cbs?)` · `new Callbacks().On(name, Delegate)`.
+Exports are looked up by **camelCase** name (SPEC name-form rule). The source-generator typed
+interface (PORT_PROMPT item 4) is NOT implemented — `Bind` covers the destructure pattern; codegen is
+a future add (not required for SPEC §7 conformance).
 
-All of the above are **missing** today.
+## Canonical ABI / SPEC conformance
 
-## Canonical ABI status — NONE IMPLEMENTED
-
-No ABI marshalling code exists. Nothing handles `cabi_realloc`, string params, string returns,
-bool normalization, or `cabi_post_*`.
-
-## SPEC.md conformance
-
-The cross-language **`SPEC.md` is at v3.0.0 (2026-06-15)** — a **BREAKING** change. String/aggregate
-RETURNS moved from the old **caller-allocated out-parameter** convention to the **canonical
-callee-allocated** convention:
-
-- The export **returns an i32 pointer** to a callee-allocated `[ptr, len]` pair.
-- The host reads `ptr` and `len` from that pair, decodes the bytes, then calls the paired
-  **`cabi_post_<name>(retPtr)`** export to let the module free what it allocated for that return.
-
-**This port's string-return handling: NONE.** There is no loader code at all, so it implements
-neither the OLD out-param convention nor the NEW v3.0.0 callee-allocated convention. Aligning to
-SPEC 3.0.0 here is greenfield work — when the loader is first written, implement the **NEW** v3.0.0
-convention directly (callee-allocated return pointer + `cabi_post_<name>`), and there is no legacy
-out-param code to migrate or remove.
+- Built **directly against SPEC v3.0.0** (callee-allocated string returns + `cabi_post_<name>`); the
+  deprecated 2.x out-param convention was skipped. Component ABI only (matches `abi.js`; numeric/bool
+  handling is profile-independent; strings use `cabi_realloc`/`cabi_post`).
+- Wasmtime's `Function.Invoke` returns a boxed `int` for i32 results, so bool decode is `(int) != 0`
+  (no high-bit-garbage issue — that bit Go/wazero needed `uint32` masking for does not arise here).
 
 ## Tests
 
-None. No test project exists. Test command (once added): `dotnet test`.
+- **Command:** `dotnet test` (via the scoop SDK `dotnet.exe`) — **7/7 pass** (`tests/LoaderTests.cs`,
+  xunit). Covers SPEC §8 (`math_50`/`booleans_50`/`strings_50`/`imports_50`, copied into `tests/` and
+  copied to output) + `Bind`, singleton identity, and a concurrent `InstancePool` (size 2, `Parallel.For`
+  over 8).
+- **Project layout gotcha:** the library csproj's implicit `**/*.cs` glob swept up `tests/*.cs`; fixed
+  with `<Compile Remove="tests/**/*.cs"/>` (+ Content/None) in `UniversalWasmLoader.csproj`.
 
-## Build / release flow (planned)
+## Build / release flow
 
-1. `dotnet build` — compile the library.
-2. `dotnet test` — run the suite (no tests yet).
-3. `dotnet pack` → produce the `.nupkg`, publish to **NuGet** (`dotnet nuget push`). Nothing
-   published yet.
-
-## Next steps for a future session
-
-1. Add the project: `dotnet new classlib`, set target framework, add the WASM runtime
-   `PackageReference` (confirm wasmtime-dotnet) — and record the actual runtime here.
-2. Implement the loader + `InstancePool` mirroring the reference loader.
-3. Implement Canonical ABI marshalling to **SPEC v3.0.0** (callee-allocated returns +
-   `cabi_post_<name>`).
-4. Add a test project and wire `dotnet test`.
+- **Build:** `dotnet build -c Release`. **Test:** `dotnet test` (use the scoop SDK `dotnet.exe`).
+- **Release:** `dotnet pack` → `dotnet nuget push` to NuGet. A `run:`-only publish workflow + the
+  `NUGET_API_KEY` secret are still TODO (owner registry secrets pending — same as the other ports).

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <PackageId>UniversalWasmLoader</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Jon Marcum</Authors>
+    <Description>WIT-aware WebAssembly loader for .NET — the Go/JS/Rust sibling port. Loads a .wasm library, reads its companion .wit, and exposes each export as a type-safe .NET call with Canonical-ABI marshalling. Built on Wasmtime.</Description>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/jrmarcum/universalWasmLoader-dotnet</RepositoryUrl>
+    <PackageTags>wasm;webassembly;wit;wasmtime;loader;canonical-abi</PackageTags>
+  </PropertyGroup>
+
+  <!-- The test project lives in tests/; keep its sources/content out of the library build. -->
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+    <Content Remove="tests/**/*" />
+    <None Remove="tests/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Wasmtime" Version="44.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" Condition="Exists('README.md')" />
+  </ItemGroup>
+
+</Project>
