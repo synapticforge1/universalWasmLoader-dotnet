@@ -27,6 +27,7 @@ bld/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+out/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -44,6 +45,10 @@ ScaffoldingReadMe.txt
 *~
 CodeCoverage/
 CLAUDE.md
+
+# Local/internal dev files (kept out of the public repo)
+cmem/
+tests/
 
 # MSBuild Binary and Structured Log
 *.binlog
