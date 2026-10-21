@@ -1,6 +1,6 @@
 # universalWasmLoader-dotnet
 
-The **.NET / C#** port of the [Universal WASM Loader](https://github.com/jrmarcum/universalWasmLoader-js)
+The **.NET / C#** port of the [Universal WASM Loader](https://github.com/synapticforge1/universalWasmLoader-js)
 — a WIT-aware WebAssembly loader. Load a `.wasm` library, read its companion `.wit` interface, and
 call each export as a type-safe .NET method with Canonical-ABI marshalling handled for you (numbers
 direct, strings encoded/decoded through linear memory, booleans normalized).
