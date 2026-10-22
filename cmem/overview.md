@@ -17,11 +17,11 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 
 - **Canonical home:** **https://github.com/synapticforge1/universalWasmLoader-dotnet**. The owner
   moved it from the personal `jrmarcum` account to the `synapticforge1` org, which the owner controls.
-  Checked 2026-10-20: `git ls-remote` on the new URL returns HEAD `04b1b6b`, the same as the local
-  `main`. The reference loader moved too: **`synapticforge1/universalWasmLoader-js`**. The -c and -dart
+  Checked 2026-10-20: `git ls-remote` on the new URL returns HEAD `04b1b6b` (now `f82e25b`, see the
+  2026-10-22 history rewrite below), the same as the local `main`. The reference loader moved too: **`synapticforge1/universalWasmLoader-js`**. The -c and -dart
   ports are already there as well.
 - **URLs repointed 2026-10-20:** the local `origin` remote now uses the org URL. Commit `f652704`
-  (**pushed** — `main` matched `origin/main` when checked 2026-10-22) updates the `UniversalWasmLoader.csproj` `<RepositoryUrl>` and the README
+  (now `6d8e7b4`; pushed) updates the `UniversalWasmLoader.csproj` `<RepositoryUrl>` and the README
   link to the JS loader. The `RepositoryUrl` goes into the NuGet package metadata, so nuget.org shows
   the new URL only from the next published version.
 - **NuGet Trusted Publishing after the transfer:** the owner reports (2026-10-20) that nuget.org
@@ -136,15 +136,25 @@ a future add (not required for SPEC §7 conformance).
   value. `CLAUDE.md` and `tests/` stay gitignored.
 - **`.claude/settings.local.json` untracked + gitignored (2026-10-22).** It is per-machine Claude Code
   settings and was tracked by mistake; a permission entry in it held a local user-profile path.
-- ⚠️ **OPEN, owner's decision: a Windows user-profile path is already in PUBLIC history** (found
-  2026-10-22 by `git grep` over every commit): `98dcf2f:cmem/overview.md:27` (the old SDK path) and
-  `.claude/settings.local.json:7` in `1c0daf9` and `f81cb55`, all on `origin/main`. No secrets, emails
-  or tokens anywhere in history. Removing it needs a history rewrite (`git filter-repo`) plus a force
-  push, which changes every commit hash from `98dcf2f` on; not done without the owner.
+- **History rewritten to remove personal information (owner: "necessary go", 2026-10-22).** Found by
+  `git grep` over every commit: a Windows user-profile path in the 2026-06-17 `cmem/overview.md:27`
+  and in the tracked `.claude/settings.local.json`; and the owner's personal email as author/committer
+  on every commit. Done with `git filter-branch` on `main` (no tags existed): the settings file removed
+  from every commit (its only commit, "update" 2026-10-20, became empty and was dropped: 10 → 9
+  commits); the one old `overview.md` blob replaced with a copy whose path reads `~\scoop\…`; the
+  email replaced by the GitHub noreply `81428316+jrmarcum@users.noreply.github.com` (public account
+  id), also set as this repo's local `user.email`. Verified: no hits in any tree, message or metadata;
+  final tree identical to before. Force-pushed with a lease on the old head; `origin/main` =
+  `8fac2db`. Old objects pruned locally. **Every hash changed** — old → new: `1588c76`→`e063d64`,
+  `e6c928f`→`46f8f3b`, `c2224f1`→`0698e13`, `98dcf2f`→`f1623bd`, `de56961`→`06a6934`,
+  `04b1b6b`→`f82e25b`, `f652704`→`6d8e7b4`, `1c0daf9`→dropped, `f81cb55`→`d6c1525`,
+  `d8f0707`→`8fac2db`. **Not in our control:** GitHub can still serve the old commits by hash until
+  its own garbage collection (full purge = a GitHub Support request), and nuget.org's v0.1.0 package
+  metadata/SourceLink names the old pre-rewrite commit.
 - **`CLAUDE.md` cut to a pointer (L2, 2026-10-22).** Its body still described an empty repo ("No
   source code or project files exist yet"), bare `dotnet`, and the old `GithubProjects` path. Now: the
   handoffs line, pointers into `cmem/`, the triggers, three things that bite, current state. Archive:
-  `git show c2224f1:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
+  `git show 0698e13:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
   live in "Repository home" above).
 - **Repo rules (2026-10-22):** LF line endings enforced by `.gitattributes` + `.editorconfig`; committed
   repeated-use scripts are C# file-based apps (not shell, not Bun); one-time scratchpad scripts may

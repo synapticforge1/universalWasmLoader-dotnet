@@ -38,7 +38,7 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   development machine; see [overview.md](overview.md) → "Toolchain".
 - **Letter H15 (workspace `handoffs.md`) — this repo's side DONE 2026-10-22.** Asked: record the
   final scope and the `dotnet10` command; nothing to port. Recorded above. Checked against the tree
-  at `f81cb55`: `git ls-files` has no `.ps1`/`.sh`/`.bat`/`.cmd`/`.ts`/`.mjs`/`.js`/`.py` and no
+  at `f81cb55` (= `d6c1525` after the 2026-10-22 history rewrite): `git ls-files` has no `.ps1`/`.sh`/`.bat`/`.cmd`/`.ts`/`.mjs`/`.js`/`.py` and no
   `.cs` beyond the five library sources; `git grep -i -E 'deno|\bbun\b|\bnode\b|npx'` matches nothing (the word boundaries matter: without
   them, `bun` matches `ubuntu-latest` at `publish.yml:12`, a false hit; corrected 2026-10-22); the four
   `run:` steps in `publish.yml` each launch one `dotnet` command (restore, build, pack, nuget push),
