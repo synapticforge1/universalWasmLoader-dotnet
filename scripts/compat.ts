@@ -70,10 +70,14 @@ export function declaredApi(shipped: string, unshipped: string): Set<string> {
   return api;
 }
 
-// Release: Unshipped folds into Shipped, and Unshipped starts over.
+// Release: Unshipped folds into Shipped, and Unshipped starts over. Shipped keeps its own order
+// (the analyzer's fixer writes it that way); removed lines drop out, new ones are appended, so a
+// release with no API change leaves Shipped byte-identical.
 export function foldUnshipped(shipped: string, unshipped: string): { shipped: string; unshipped: string } {
-  const api = [...declaredApi(shipped, unshipped)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-  return { shipped: `#nullable enable\n${api.join("\n")}\n`, unshipped: "#nullable enable\n" };
+  const api = declaredApi(shipped, unshipped);
+  const kept = [...declaredApi(shipped, "")].filter((l) => api.has(l));
+  const added = [...api].filter((l) => !kept.includes(l));
+  return { shipped: `#nullable enable\n${[...kept, ...added].join("\n")}\n`, unshipped: "#nullable enable\n" };
 }
 
 export function specVersion(readme: string): string {
@@ -453,6 +457,9 @@ function selftest(): number {
   check("api: CRLF tolerated", declaredApi("#nullable enable\r\nA\r\n", "").has("A"));
   const folded = foldUnshipped(shipped, "#nullable enable\nA.G() -> void\n*REMOVED*A.F() -> int\n");
   check("api: fold moves adds, applies removes", folded.shipped === "#nullable enable\nA\nA.G() -> void\n" && folded.unshipped === "#nullable enable\n");
+  const unsorted = "#nullable enable\nstatic Z.M() -> void\nA\n";
+  check("api: an empty fold leaves Shipped byte-identical", foldUnshipped(unsorted, "#nullable enable\n").shipped === unsorted);
+  check("api: fold appends after the existing order", foldUnshipped(unsorted, "#nullable enable\nB\n").shipped === `${unsorted}B\n`);
 
   const readme =
     "# X\n\n- Conforms to **SPEC.md v3.0.0** (ABI)\n\n### ⚠️ Breaking Changes\n\n| Version | Change |\n| --- | --- |\n" +
