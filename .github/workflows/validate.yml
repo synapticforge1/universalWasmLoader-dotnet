@@ -1,0 +1,33 @@
+name: Validate
+
+# Every push and pull request: the test suite, the compatibility gate's self-test, and a check that
+# api-surface.json matches the built assembly (an API change must re-baseline it in its own commit).
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Test
+        run: dotnet test tests
+
+      - name: Compatibility gate self-test
+        run: dotnet run --file scripts/compat.cs -- selftest
+
+      - name: Surface snapshot is current
+        run: dotnet run --file scripts/compat.cs -- surface --check

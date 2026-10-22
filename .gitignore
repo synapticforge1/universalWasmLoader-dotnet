@@ -46,9 +46,10 @@ ScaffoldingReadMe.txt
 CodeCoverage/
 CLAUDE.md
 
-# Local/internal dev files (kept out of the public repo).
-# cmem/ is tracked (since 2026-10-22): it must never hold secrets or personal information.
-tests/
+# cmem/ and tests/ are tracked (since 2026-10-22): they must never hold secrets or personal
+# information. The compatibility gate's previous-tag tests need tests/ inside every tag.
+# Gate scratch space (scripts/compat.cs):
+.compat/
 
 # Per-machine Claude Code settings (permission entries carry local user-profile paths)
 .claude/settings.local.json

@@ -15,8 +15,11 @@ jobs:
       contents: read
 
     steps:
+      # Full history and tags: the compatibility gate compares against the previous v* tag.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -24,6 +27,16 @@ jobs:
           dotnet-version: |
             8.0.x
             10.0.x
+
+      - name: Test
+        run: dotnet test tests
+
+      - name: Compatibility gate self-test
+        run: dotnet run --file scripts/compat.cs -- selftest
+
+      # Blocking: version line = tag, surface floor vs the previous tag, previous tag's tests.
+      - name: Compatibility gate (release)
+        run: dotnet run --file scripts/compat.cs -- release
 
       - name: Restore
         run: dotnet restore UniversalWasmLoader.csproj

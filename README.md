@@ -102,12 +102,26 @@ require a `.wit`).
 ## Test
 
 ```sh
-dotnet test
+dotnet test tests
 ```
 
 The suite (`tests/LoaderTests.cs`) covers the cross-language SPEC §8 fixtures — numeric round-trip,
 bool normalization, string params/returns (Canonical ABI), host import callbacks — plus `Bind`, the
-singleton, and the concurrent instance pool.
+singleton, and the concurrent instance pool. The fixtures are the stamped reference set from
+`universalWasmLoader-js` (`tests/fixtures.json`).
+
+## Versioning
+
+[SemVer](https://semver.org/). Every release passes a compatibility gate
+(`dotnet run --file scripts/compat.cs -- report`): the public API is snapshotted in
+`api-surface.json`, a removed or changed member forces a major version, an added one at least a
+minor, and the previous release's tests must still pass against the new code. Before 1.0.0, a
+breaking change may ship as a minor version, but it is always listed below.
+
+### ⚠️ Breaking Changes
+
+| Version | Change |
+| --- | --- |
 
 ## License
 

@@ -19,11 +19,15 @@
     <PackageTags>wasm;webassembly;wit;wasmtime;loader;canonical-abi</PackageTags>
   </PropertyGroup>
 
-  <!-- The test project lives in tests/; keep its sources/content out of the library build. -->
+  <!-- The test project lives in tests/ and the C# file-based scripts in scripts/ (run with
+       dotnet10 run and the file flag); keep their sources/content out of the library build. -->
   <ItemGroup>
     <Compile Remove="tests/**/*.cs" />
     <Content Remove="tests/**/*" />
     <None Remove="tests/**/*" />
+    <Compile Remove="scripts/**/*.cs" />
+    <Content Remove="scripts/**/*" />
+    <None Remove="scripts/**/*" />
   </ItemGroup>
 
   <ItemGroup>
