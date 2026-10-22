@@ -10,6 +10,14 @@ belong to the workspace session are listed only while not yet done there.
   ports copy: expect to re-copy `tests/*.wasm`, `*.wit`, `*.wat` and `fixtures.json` from -js then
   (`bun scripts/fixtures.ts` must pass after).
 
+- **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
+  support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
+  `v0.1.0` + `v0.1.1` only (all post-purge), no LFS; old commits still served by hash (e.g.
+  `f81cb55`, `f1623bd`). The request lists the 29 orphaned commits that were ever on GitHub (9
+  before purge 1, 20 between the purges; full ids from the private bundles in the workspace's
+  `cmem/local/backups/`) and gives `1588c76` / `0698e13` as the first changed commits (filter-branch
+  has no filter-repo note). It names neither the personal address nor the removed paths.
+
 ## Backlog
 
 - **Source-generator typed interface** (PORT_PROMPT item 4): not built; not required for SPEC
