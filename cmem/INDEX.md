@@ -27,11 +27,13 @@ When the owner says **"look for code issues"** (or "code audit" / "audit the cod
 comprehensive audit across tested AND untested paths for: (1) workarounds / temporary hacks;
 (2) dead code; (3) bugs (wrong ABI marshalling, off-by-one pointer/length math, endianness, missing
 `cabi_post` calls); and (4) silent fall-throughs (returning a default instead of erroring). Report
-`file:line` + severity, fix the safe ones, and keep the test suite green (`dotnet test`).
+`file:line` + severity, fix the safe ones, and keep the test suite green (`dotnet10 test tests`).
 
 ## Files
 
 | File | What it holds |
 | --- | --- |
-| [overview.md](overview.md) | What this loader port is, where the repo lives (`synapticforge1` org since 2026-10-20; nuget.org updated the Trusted Publishing owner itself), its language/runtime and toolchain (.NET 10 SDK, run as `dotnet10`), API surface, ABI/SPEC conformance status, tests (fixtures = stamped -js set since 2026-10-22; §10 fixtures untested), `CLAUDE.md` pointer (L2), and release flow |
-| [working-rules.md](working-rules.md) | Repo rules: committed repeated-use scripts are C# file-based apps (`dotnet10 run --file`), not shell or Bun, in `scripts/` excluded from the csproj when the first lands; one-time scratchpad scripts may be any language; LF line endings only, enforced by `.gitattributes` + `.editorconfig` (2026-10-22) |
+| [overview.md](overview.md) | What this loader port is, where the repo lives (`synapticforge1` org since 2026-10-20; nuget.org updated the Trusted Publishing owner itself), its language/runtime and toolchain (.NET 10 SDK, run as `dotnet10`), API surface, ABI/SPEC conformance status, tests (tracked; fixtures = stamped -js set since 2026-10-22; §10 fixtures untested), `CLAUDE.md` pointer (L2), the 2026-10-22 history rewrite (old → new hashes), and release flow |
+| [working-rules.md](working-rules.md) | Repo rules: committed scripts are TypeScript run by Bun (C# → Bun, workspace rule 1; `dotnet-script` does not run here); one-time scratchpad scripts may be any language; LF only (`.gitattributes` + `.editorconfig`); no secrets or personal information (2026-10-22) |
+| [compat-gate.md](compat-gate.md) | The SemVer compatibility gate (H6): PublicAPI files + analyzer (Rule 1), `bun scripts/compat.ts` floor/bump/release/selftest, previous-tag tests, the v0.1.0 exception, the end-to-end proof and the four defects it found; v0.1.0 tag not yet made (2026-10-22) |
+| [best-practices.md](best-practices.md) | METHOD rules: this repo's own (§ L1–L3) + the workspace's 28 ★ convergent rules, copied verbatim and stamped 2026-10-22 |

@@ -43,7 +43,8 @@ before writing the port.
 2026-10-22; workspace Tooling rule 1): on the development machine bare `dotnet` resolves to a
 runtime-only install with no SDK. Where `dotnet10` comes from is a machine fact, kept out of this
 committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22: `dotnet10 --version`
-→ 10.0.402. Build, test and `dotnet10 run --file <script>.cs` all go through it. The test project
+→ 10.0.402. Build, test and pack go through it; committed scripts are Bun (`bun scripts/<name>.ts`,
+[working-rules.md](working-rules.md)). The test project
 targets **net10.0**; the library multi-targets **net8.0;net10.0** for consumers.
 
 ## Current state — IMPLEMENTED + SPEC-3.0.0 conformant (2026-06-17)
@@ -101,10 +102,15 @@ a future add (not required for SPEC §7 conformance).
     day with `ls-remote` (read-only): its `main` is still `673d7e3` (2026-09-29), none of its 153
     branches/tags contains `f50c8e4`, and local `main` is 131 commits ahead. It becomes pinnable when
     wasmtk's `main` is pushed (the owner's call, in wasmtk). -js says the ports copy once it is
-    pinnable; copied early on owner direction, since `tests/` is local-only. The stamp's
-    `generator.repository` still names `jrmarcum/wasmtk` (GitHub redirects; -js owns the stamp).
-  - No hash-check of the copy runs in this repo (-js has `bun run fixtures`); a C# check would be
-    this repo's first committed script.
+    pinnable; copied early on owner direction (`tests/` was local-only then; tracked since the
+    gate commit, 2026-10-22). The stamp's `generator.repository` still names `jrmarcum/wasmtk`
+    (GitHub redirects; -js owns the stamp).
+  - No hash-check of the copy runs in this repo (-js has `bun run fixtures`); it would be a second
+    Bun script beside `scripts/compat.ts`.
+- **`tests/` is tracked (2026-10-22, with the compatibility gate):** every tag must carry the suite
+  the next release has to pass ([compat-gate.md](compat-gate.md) Rule 3). Audited first: no personal
+  data, LF throughout, nothing embedded in the `.wasm`. CI (`validate.yml`) runs `dotnet test tests`
+  on every push.
 - **Project layout gotcha:** the library csproj's implicit `**/*.cs` glob swept up `tests/*.cs`; fixed
   with `<Compile Remove="tests/**/*.cs"/>` (+ Content/None) in `UniversalWasmLoader.csproj`.
 
@@ -122,8 +128,13 @@ a future add (not required for SPEC §7 conformance).
   (Owner `synapticforge1` since the 2026-10-20 move, which nuget.org updated itself; originally
   `jrmarcum`. Repo `universalWasmLoader-dotnet`, Workflow `publish.yml`, no environment) and the
   `NUGET_USER` GitHub repo secret (nuget.org profile name, not email).
-- **First publish:** **v0.1.0 published to nuget.org 2026-06-24.** Bump `<Version>` in the csproj per
-  release (nuget.org rejects re-pushing an existing version); tag releases `v<ver>`.
+- **First publish:** **v0.1.0 published to nuget.org 2026-06-24**, from commit `f82e25b` (the
+  nuspec's `repository commit` is `04b1b6b`, the pre-rewrite hash of the same commit). **No tag was
+  ever made for it.**
+- **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
+  2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
+  SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate
+  on the tag (blocking) before packing. nuget.org rejects re-pushing an existing version.
 - **Licensing:** package license is **MIT** (`<PackageLicenseExpression>MIT</PackageLicenseExpression>`),
   corrected from an earlier `MIT OR Apache-2.0` that had no matching Apache file; README §License synced.
 - **Repo hygiene (2026-06-24):** `CLAUDE.md`, `cmem/`, and `tests/` were made **gitignored and
@@ -133,7 +144,7 @@ a future add (not required for SPEC §7 conformance).
   no personal information are ever made public**. Audited before un-ignoring: one personal item
   removed (a Windows user-profile path to the SDK) and the machine facts moved to a pointer to the
   workspace's `cmem/local/environment.md`. Secrets appear by NAME only (`NUGET_USER`), never by
-  value. `CLAUDE.md` and `tests/` stay gitignored.
+  value. `CLAUDE.md` stays gitignored; `tests/` was tracked later the same day (see "Tests").
 - **`.claude/settings.local.json` untracked + gitignored (2026-10-22).** It is per-machine Claude Code
   settings and was tracked by mistake; a permission entry in it held a local user-profile path.
 - **History rewritten to remove personal information (owner: "necessary go", 2026-10-22).** Found by
@@ -157,6 +168,7 @@ a future add (not required for SPEC §7 conformance).
   `git show 0698e13:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
   live in "Repository home" above).
 - **Repo rules (2026-10-22):** LF line endings enforced by `.gitattributes` + `.editorconfig`; committed
-  repeated-use scripts are C# file-based apps (not shell, not Bun); one-time scratchpad scripts may
-  be any language. Details in
-  [working-rules.md](working-rules.md).
+  repeated-use scripts are TypeScript run by Bun (C# file-based apps build an executable, which the
+  workspace rule excludes); one-time scratchpad scripts may be any language; no secrets or personal
+  information. Details in [working-rules.md](working-rules.md); method rules in
+  [best-practices.md](best-practices.md).
