@@ -139,6 +139,18 @@ a future add (not required for SPEC §7 conformance).
   is NOT published yet:** `gh` is not authenticated on this machine (no `GH_TOKEN`), so the owner
   publishes it (web UI: Releases → Draft a new release → tag `v0.1.1` → Publish). Publishing runs
   `publish.yml`: tests, self-test, the release gate, then pack + push 0.1.1 to nuget.org.
+- ⚠️ **First publish attempt of 0.1.1 FAILED at `NuGet/login@v1`** (owner ran `publish.yml` by
+  `workflow_dispatch` on `v0.1.1`, run 39821337557, 2026-10-22): "Token exchange failed (HTTP 401) …
+  No matching trust policy owned by user '***' was found. Make sure you are using the username of the
+  policy creator, not the policy owner." Every earlier step passed (tests, self-test, **release
+  gate**, restore, build, pack); NuGet push was skipped; nuget.org still lists only 0.1.0. Likely
+  cause: the repo transfer — the OIDC token now says repository owner `synapticforge1`, and the
+  policy's GitHub repository-owner field (or `NUGET_USER`) no longer matches. **This contradicts the
+  2026-10-20 note above that the policy "needed no manual change"**; that note was about the
+  policy's nuget.org owner, not its GitHub fields (unverified either way from here). Owner to check
+  on nuget.org: policy GitHub fields = `synapticforge1` / `universalWasmLoader-dotnet` /
+  `publish.yml` / no environment; `NUGET_USER` = the policy CREATOR's nuget.org username; else
+  create a new policy. Then re-run `publish.yml` on `v0.1.1` (safe: `--skip-duplicate`).
 - **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate

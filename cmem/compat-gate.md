@@ -96,9 +96,11 @@ was final; workspace 2.1):
   `success` — Setup Bun, Test, self-test, PublicAPI check. Only the step CONCLUSIONS were read (the
   public API); the logs' test/self-test COUNTS were not, since downloading logs needs an authenticated
   `gh` (workspace 1.1: a conclusion is not the count).
-- The `publish` steps (Bun 1.4.3 via `oven-sh/setup-bun@v2`, `fetch-depth: 0`) run only on a
-  published release.
-- **`release` has never run in CI**: it runs on the first published GitHub Release (v0.1.1 or later).
+- **`release` first ran in CI 2026-10-22** (`publish.yml`, `workflow_dispatch` on `v0.1.1`, run
+  39821337557): Setup Bun, Test, self-test and "Compatibility gate (release)" all `success` (step
+  conclusions only, as above). The run then failed at `NuGet/login@v1` (trusted-publishing policy
+  mismatch after the repo transfer; [overview.md](overview.md) → "Build / release flow"), which is
+  not a gate fault.
 
 ## Traps met building it
 
