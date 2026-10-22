@@ -113,9 +113,10 @@ singleton, and the concurrent instance pool. The fixtures are the stamped refere
 ## Versioning
 
 [SemVer](https://semver.org/). Every release passes a compatibility gate
-(`dotnet run --file scripts/compat.cs -- report`): the public API is snapshotted in
-`api-surface.json`, a removed or changed member forces a major version, an added one at least a
-minor, and the previous release's tests must still pass against the new code. Before 1.0.0, a
+(`bun scripts/compat.ts report`): the public API is declared in `PublicAPI.Shipped.txt` /
+`PublicAPI.Unshipped.txt` (enforced at build time by `Microsoft.CodeAnalysis.PublicApiAnalyzers`),
+a removed or changed member forces a major version, an added one at least a minor, and the previous
+release's tests must still pass against the new code. Before 1.0.0, a
 breaking change may ship as a minor version, but it is always listed below.
 
 ### ⚠️ Breaking Changes

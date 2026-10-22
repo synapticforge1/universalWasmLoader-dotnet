@@ -1,0 +1,21 @@
+#nullable enable
+static UniversalWasmLoader.Loader.CreateSingleton(string! path, UniversalWasmLoader.Callbacks? callbacks = null) -> System.Func<UniversalWasmLoader.WasmModule!>!
+static UniversalWasmLoader.Loader.ImportAsync(string! source, UniversalWasmLoader.Callbacks? callbacks = null) -> System.Threading.Tasks.Task<UniversalWasmLoader.WasmModule!>!
+static UniversalWasmLoader.Loader.Load(string! path, UniversalWasmLoader.Callbacks? callbacks = null) -> UniversalWasmLoader.WasmModule!
+UniversalWasmLoader.Callbacks
+UniversalWasmLoader.Callbacks.Callbacks() -> void
+UniversalWasmLoader.Callbacks.On(string! name, System.Delegate! fn) -> UniversalWasmLoader.Callbacks!
+UniversalWasmLoader.InstancePool
+UniversalWasmLoader.InstancePool.Acquire() -> UniversalWasmLoader.WasmModule!
+UniversalWasmLoader.InstancePool.Available.get -> int
+UniversalWasmLoader.InstancePool.Dispose() -> void
+UniversalWasmLoader.InstancePool.InstancePool(string! path, int size = 4, UniversalWasmLoader.Callbacks? callbacks = null) -> void
+UniversalWasmLoader.InstancePool.Release(UniversalWasmLoader.WasmModule! module) -> void
+UniversalWasmLoader.InstancePool.Run<T>(System.Func<UniversalWasmLoader.WasmModule!, T>! fn) -> T
+UniversalWasmLoader.InstancePool.Size.get -> int
+UniversalWasmLoader.Loader
+UniversalWasmLoader.WasmModule
+UniversalWasmLoader.WasmModule.Bind(string! name) -> System.Func<object?[]!, object?>!
+UniversalWasmLoader.WasmModule.Call(string! name, params object?[]! args) -> object?
+UniversalWasmLoader.WasmModule.Dispose() -> void
+UniversalWasmLoader.WasmModule.Exports.get -> System.Collections.Generic.IReadOnlyCollection<string!>!

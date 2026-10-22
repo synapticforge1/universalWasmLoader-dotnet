@@ -28,15 +28,20 @@ jobs:
             8.0.x
             10.0.x
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
       - name: Test
         run: dotnet test tests
 
       - name: Compatibility gate self-test
-        run: dotnet run --file scripts/compat.cs -- selftest
+        run: bun scripts/compat.ts selftest
 
-      # Blocking: version line = tag, surface floor vs the previous tag, previous tag's tests.
+      # Blocking: version line = tag, PublicAPI floor vs the previous tag, previous tag's tests.
       - name: Compatibility gate (release)
-        run: dotnet run --file scripts/compat.cs -- release
+        run: bun scripts/compat.ts release
 
       - name: Restore
         run: dotnet restore UniversalWasmLoader.csproj

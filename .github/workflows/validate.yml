@@ -1,7 +1,7 @@
 name: Validate
 
 # Every push and pull request: the test suite, the compatibility gate's self-test, and a check that
-# api-surface.json matches the built assembly (an API change must re-baseline it in its own commit).
+# PublicAPI.*.txt match the code (an API change must re-baseline them in its own commit).
 on:
   push:
   pull_request:
@@ -23,11 +23,16 @@ jobs:
             8.0.x
             10.0.x
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
       - name: Test
         run: dotnet test tests
 
       - name: Compatibility gate self-test
-        run: dotnet run --file scripts/compat.cs -- selftest
+        run: bun scripts/compat.ts selftest
 
-      - name: Surface snapshot is current
-        run: dotnet run --file scripts/compat.cs -- surface --check
+      - name: PublicAPI files match the code
+        run: bun scripts/compat.ts surface --check
