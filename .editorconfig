@@ -1,0 +1,7 @@
+root = true
+
+# LF line endings for every file editors create or save (matches .gitattributes).
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8

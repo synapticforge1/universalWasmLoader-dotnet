@@ -1,0 +1,7 @@
+# LF everywhere, in the repo and in every checkout, regardless of the cloner's core.autocrlf.
+* text=auto eol=lf
+
+# Binary fixtures and assets: never touch their bytes.
+*.wasm binary
+*.png  binary
+*.snk  binary
