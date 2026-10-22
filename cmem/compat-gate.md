@@ -98,9 +98,10 @@ was final; workspace 2.1):
   `gh` (workspace 1.1: a conclusion is not the count).
 - **`release` first ran in CI 2026-10-22** (`publish.yml`, `workflow_dispatch` on `v0.1.1`, run
   39821337557): Setup Bun, Test, self-test and "Compatibility gate (release)" all `success` (step
-  conclusions only, as above). The run then failed at `NuGet/login@v1` (trusted-publishing policy
-  mismatch after the repo transfer; [overview.md](overview.md) → "Build / release flow"), which is
-  not a gate fault.
+  conclusions only, as above). That attempt failed at `NuGet/login@v1` (trusted-publishing policy
+  locked to the pre-transfer owner ID; [overview.md](overview.md) → "Build / release flow"), not a
+  gate fault. **Attempt 3 published 0.1.1** with every step `success`: the gate's first complete
+  release, end to end.
 
 ## Traps met building it
 

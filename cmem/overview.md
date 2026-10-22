@@ -139,7 +139,17 @@ a future add (not required for SPEC §7 conformance).
   is NOT published yet:** `gh` is not authenticated on this machine (no `GH_TOKEN`), so the owner
   publishes it (web UI: Releases → Draft a new release → tag `v0.1.1` → Publish). Publishing runs
   `publish.yml`: tests, self-test, the release gate, then pack + push 0.1.1 to nuget.org.
-- ⚠️ **First publish attempt of 0.1.1 FAILED at `NuGet/login@v1`** (owner ran `publish.yml` by
+- ✅ **0.1.1 PUBLISHED to nuget.org 2026-10-22** — run 39821337557 attempt 3 (re-run after the
+  owner fixed the trusted-publishing policy on nuget.org; details of the fix are the owner's):
+  every step `success`, including the release gate, NuGet login and push. The 0.1.1 nuspec names
+  `https://github.com/synapticforge1/universalWasmLoader-dotnet` at commit `8978aaf` (= tag
+  `v0.1.1`), so the old-URL item and the pre-rewrite SourceLink commit are both superseded from
+  0.1.1 on (0.1.0's metadata still names `jrmarcum` / `04b1b6b`, immutable). The flat-container
+  listed 0.1.0, 0.1.1 right away; the registration index still showed only 0.1.0 a few minutes
+  later (indexing lag, not re-checked). **Note:** GitHub's "Re-run" keeps the run id and bumps
+  `run_attempt`; a watcher must not filter re-runs out by id.
+- **History of the 0.1.1 publish (superseded by the line above):** the first attempt FAILED at
+  `NuGet/login@v1` (owner ran `publish.yml` by
   `workflow_dispatch` on `v0.1.1`, run 39821337557, 2026-10-22): "Token exchange failed (HTTP 401) …
   No matching trust policy owned by user '***' was found. Make sure you are using the username of the
   policy creator, not the policy owner." Every earlier step passed (tests, self-test, **release
