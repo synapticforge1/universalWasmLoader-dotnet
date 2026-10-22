@@ -255,10 +255,23 @@ function lastTag(repo: string, excludeHead: boolean): string | undefined {
     .sort((a, b) => compare(parseSemVer(b), parseSemVer(a)))[0];
 }
 
+// The PublicAPI analyzer's errors in build output, one per symbol: the message without MSBuild's
+// trailing help link and `[project::TargetFramework=…]` (a symbol may itself contain `[]`).
+export function analyzerFindings(output: string): string[] {
+  const found = new Set<string>();
+  for (const line of output.split(/\r?\n/)) {
+    const m = /error (RS00(?:16|17|36|37)): (.*)$/.exec(line);
+    if (!m) continue;
+    const message = m[2].replace(/\s*\[[^\]]*::TargetFramework=[^\]]*\]\s*$/, "").replace(/\s*\(https?:\/\/[^)]*\)\s*$/, "");
+    found.add(`${m[1]}: ${message.trim()}`);
+  }
+  return [...found];
+}
+
 // Rule 1 enforcement: the build fails on any RS0016/RS0017/RS0036/RS0037 (csproj WarningsAsErrors).
 function buildCheck(repo: string): { ok: boolean; findings: string[] } {
   const r = run([dotnet(), "build", join(repo, PROJECT), "-c", "Release"], repo);
-  const findings = [...new Set([...r.output.matchAll(/error (RS00(?:16|17|36|37)): ([^[\r\n]+)/g)].map((m) => `${m[1]}: ${m[2].trim()}`))];
+  const findings = analyzerFindings(r.output);
   if (r.code !== 0 && findings.length === 0) throw new GateError(`the build failed for another reason:\n${tail(r.output, 25)}`);
   return { ok: r.code === 0, findings };
 }
@@ -489,6 +502,15 @@ function selftest(): number {
   check("tests: zero passed is red", !judgeTests("Passed!  - Failed:     0, Passed:     0, Skipped:     0, Total:     0", 0).green);
   check("tests: no counts is red", !judgeTests("Build FAILED.", 0).green);
   check("tests: counts summed over runs", judgeTests("Failed: 0, Passed: 3\nFailed: 0, Passed: 4", 0).summary.startsWith("7 passed"));
+
+  const rs =
+    "D:\\r\\WasmModule.cs(70,5): error RS0017: Symbol 'UniversalWasmLoader.WasmModule.Bind(string! name) -> System.Func<object?[]!, object?>!' is part of the declared API, but is either not public or could not be found (https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/PublicApiAnalyzers/PublicApiAnalyzers.Help.md) [D:\\r\\UniversalWasmLoader.csproj::TargetFramework=net8.0]";
+  const findings = analyzerFindings(`${rs}\r\n${rs.replace("net8.0", "net10.0")}\nerror CS0103: unrelated`);
+  check(
+    "analyzer: full symbol kept through []",
+    findings.length === 1 && findings[0] === "RS0017: Symbol 'UniversalWasmLoader.WasmModule.Bind(string! name) -> System.Func<object?[]!, object?>!' is part of the declared API, but is either not public or could not be found",
+  );
+  check("analyzer: other errors ignored", analyzerFindings("x.cs(1,1): error CS0103: The name 'y' does not exist").length === 0);
 
   for (const f of failed) console.log(`FAIL ${f}`);
   console.log(`selftest: ${total - failed.length}/${total} passed`);
