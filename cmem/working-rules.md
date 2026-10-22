@@ -55,7 +55,12 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
 ## No secrets, no personal information (owner, 2026-10-22)
 
 - 🔒 Nothing committed may hold a secret or personal information: secrets by NAME only, never a
-  value; no user-profile paths, personal emails or machine facts (those go in the workspace's
-  `cmem/local/environment.md`). Check every commit that touches `cmem/`, `tests/` or `scripts/`.
+  value; no personal emails or machine facts (those go in the workspace's
+  `cmem/local/environment.md`). **Any absolute path on the owner's machines is personal
+  information** (owner clarification 2026-10-22, workspace letter H18): `D:\Programs\…`,
+  `C:\Users\…`, scoop/AppData/Temp paths, home-relative ones included — not only user-named paths.
+  Use repo-relative paths or placeholders (`<repo-root>`). Check every commit with
+  `git grep -n -I -i -E '[A-Za-z]:[\\/](Programs|Users)|AppData|scoop|\\Temp\\|@gmail'` (and before
+  pushing, `git grep … origin/main`).
 - Commits are authored with the GitHub noreply address (this repo's local `user.email`); the
   2026-10-22 history rewrite is in [overview.md](overview.md) → "Build / release flow".

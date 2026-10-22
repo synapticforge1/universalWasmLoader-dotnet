@@ -1,6 +1,7 @@
 name: Validate
 
-# Every push and pull request: the test suite, the compatibility gate's self-test, and a check that
+# Every push and pull request: the fixtures against their stamp, the test suite, the compatibility
+# gate's self-test, and a check that
 # PublicAPI.*.txt match the code (an API change must re-baseline them in its own commit).
 on:
   push:
@@ -27,6 +28,9 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
+
+      - name: Fixtures match the stamp
+        run: bun scripts/fixtures.ts
 
       - name: Test
         run: dotnet test tests

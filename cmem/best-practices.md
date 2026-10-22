@@ -21,6 +21,12 @@ with the next free number; numbers are never reused.
   `publish.yml`. The run had used `\bbun\b`/`\bnode\b`; the conclusion held, the record did not
   (2026-10-22, caught by the owner; [working-rules.md](working-rules.md)).
   [universalWasmLoader-dotnet; cf. workspace 6.1]
+- **L4 On `D:` (exFAT) an incremental build can run the PREVIOUS binary; a mutant result that
+  names the wrong test is a stale build, not a finding.** Inverting the new SPEC §10 tests, the
+  second loader mutant (WASI removed) reported the FIRST mutant's failure (`Initialize`), because
+  the edit was not rebuilt; `--no-incremental` gave the true result (`WasiIo` fails). The gate's
+  build check now always passes `--no-incremental` (2026-10-22, [compat-gate.md](compat-gate.md)).
+  Force a rebuild whenever a build's output is the evidence. [universalWasmLoader-dotnet; cf. L1]
 
 ## ★ The workspace's convergent rules — a COPY, stamped 2026-10-22 (workspace letter H6)
 

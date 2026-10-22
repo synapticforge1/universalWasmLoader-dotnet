@@ -83,11 +83,15 @@ a future add (not required for SPEC §7 conformance).
 
 ## Tests
 
-- **Command:** `dotnet10 test tests` — **7/7 pass** (re-run
-  2026-10-22, SDK 10.0.402) (`tests/LoaderTests.cs`,
+- **Command:** `dotnet10 test tests` — **9/9 pass** (2026-10-22, SDK 10.0.402) (`tests/LoaderTests.cs`,
   xunit). Covers SPEC §8 (`math_50`/`booleans_50`/`strings_50`/`imports_50`, copied into `tests/` and
   copied to output) + `Bind`, singleton identity, and a concurrent `InstancePool` (size 2, `Parallel.For`
-  over 8).
+  over 8), and **SPEC §10** (added 2026-10-22, ported from -js `loader.test.js:95-111`):
+  `Initialize` (`init_check.wasm`, raw-exports path: `getValue` = 99 proves `_initialize` ran) and
+  `WasiIo` (`wasi_io_50.wasm` imports `fd_write`: `logAndDouble(21)` = 42 proves the WASI shim).
+  **Inverted** with loader mutants (forced rebuilds): `_initialize` call removed → `Initialize`
+  fails; `DefineWasi()` removed → `WasiIo` fails ("unknown import:
+  `wasi_snapshot_preview1::fd_write` has not been defined"); restored, 9/9.
 - **Fixtures = the stamped -js reference set (H7 / L3, 2026-10-22).** Copied from
   `universalWasmLoader-js` commit `bd4f8ab` (pushed): `tests/*.wasm`, `*.wit`, `init_check.wat` and
   the stamp `tests/fixtures.json` (generator wasmtk `f50c8e4`). All 12 sha256 verified against the
@@ -95,8 +99,6 @@ a future add (not required for SPEC §7 conformance).
   the source's older mtime, and the test csproj copies with `PreserveNewest`, so check this after any
   re-copy). Before: the four `.wasm` differed from the stamp, the four `.wit` matched; old set backed
   up only in that session's scratchpad. **Open:**
-  - `wasi_io_50` and `init_check` (SPEC §10, WASI + `_initialize`) are now present but **untested**
-    here; add tests.
   - **The generator pin is not public yet:** `f50c8e4` is on wasmtk's local `main` but not on
     GitHub. wasmtk moved to **`synapticforge1/wasmtk`** (owner, 2026-10-22), but re-checked the same
     day with `ls-remote` (read-only): its `main` is still `673d7e3` (2026-09-29), none of its 153
@@ -105,8 +107,10 @@ a future add (not required for SPEC §7 conformance).
     pinnable; copied early on owner direction (`tests/` was local-only then; tracked since the
     gate commit, 2026-10-22). The stamp's `generator.repository` still names `jrmarcum/wasmtk`
     (GitHub redirects; -js owns the stamp).
-  - No hash-check of the copy runs in this repo (-js has `bun run fixtures`); it would be a second
-    Bun script beside `scripts/compat.ts`.
+  - **Hash check: `bun scripts/fixtures.ts`** (2026-10-22; same rule as -js
+    `scripts/check-fixtures.ts`): every stamped file present and sha256-identical, no unstamped
+    `.wasm`/`.wit`/`.wat` in `tests/`. Runs in CI `validate.yml`. Inverted on a copy (one flipped
+    byte, a stray `.wit`, a missing `.wat` → exit 1 naming all three); `tests/` passes, 12 files.
 - **`tests/` is tracked (2026-10-22, with the compatibility gate):** every tag must carry the suite
   the next release has to pass ([compat-gate.md](compat-gate.md) Rule 3). Audited first: no personal
   data, LF throughout, nothing embedded in the `.wasm`. CI (`validate.yml`) runs `dotnet test tests`
@@ -191,18 +195,21 @@ a future add (not required for SPEC §7 conformance).
   and in the tracked `.claude/settings.local.json`; and the owner's personal email as author/committer
   on every commit. Done with `git filter-branch` on `main` (no tags existed): the settings file removed
   from every commit (its only commit, "update" 2026-10-20, became empty and was dropped: 10 → 9
-  commits); the one old `overview.md` blob replaced with a copy whose path reads `~\scoop\…`; the
+  commits); the one old `overview.md` blob replaced with a copy whose SDK path no longer names the user; the
   email replaced by the GitHub noreply `81428316+jrmarcum@users.noreply.github.com` (public account
   id), also set as this repo's local `user.email`. Verified: no hits in any tree, message or metadata;
   final tree identical to before. Force-pushed with a lease on the old head; `origin/main` =
-  `8fac2db`. Old objects pruned locally. **Every hash changed** — old → new: `1588c76`→`e063d64`,
+  `8fac2db`. Old objects pruned locally; the pre-rewrite history is kept privately as a bundle in
+  the workspace's machine-local `cmem/local/backups/` (never committed anywhere). **Every hash changed** — old → new: `1588c76`→`e063d64`,
   `e6c928f`→`46f8f3b`, `c2224f1`→`0698e13`, `98dcf2f`→`f1623bd`, `de56961`→`06a6934`,
   `04b1b6b`→`f82e25b`, `f652704`→`6d8e7b4`, `1c0daf9`→dropped, `f81cb55`→`d6c1525`,
   `d8f0707`→`8fac2db`. **Not in our control:** GitHub can still serve the old commits by hash until
   its own garbage collection (full purge = a GitHub Support request), and nuget.org's v0.1.0 package
-  metadata/SourceLink names the old pre-rewrite commit.
+  metadata/SourceLink names the old pre-rewrite commit. ⚠️ **Scope gap found later the same day:**
+  the workspace's wider definition (letter H18: ANY absolute machine path) still finds paths in
+  `0698e13`/`f1623bd` — see [open-work.md](open-work.md).
 - **`CLAUDE.md` cut to a pointer (L2, 2026-10-22).** Its body still described an empty repo ("No
-  source code or project files exist yet"), bare `dotnet`, and the old `GithubProjects` path. Now: the
+  source code or project files exist yet"), bare `dotnet`, and an outdated local checkout path. Now: the
   handoffs line, pointers into `cmem/`, the triggers, three things that bite, current state. Archive:
   `git show 0698e13:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
   live in "Repository home" above).

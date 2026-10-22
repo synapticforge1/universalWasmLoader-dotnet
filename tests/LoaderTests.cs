@@ -3,7 +3,7 @@ using Xunit;
 
 namespace UniversalWasmLoader.Tests;
 
-// The cross-language SPEC §8 reference suite, plus Bind / singleton / pool.
+// The cross-language SPEC §8 and §10 reference suite, plus Bind / singleton / pool.
 public class LoaderTests
 {
     private static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, name);
@@ -51,6 +51,24 @@ public class LoaderTests
         using var m = Loader.Load(Fixture("imports_50.wasm"), cbs);
         Assert.Equal(12.0, m.Call("scale", 3.0, 4.0));
         Assert.Equal(17, m.Call("combine", 10, 7));
+    }
+
+    // SPEC §10 — _initialize is called after instantiation. init_check has no .wit (raw-exports
+    // path); its _initialize sets a global to 99 that getValue reads, so 99 proves it ran.
+    [Fact]
+    public void Initialize()
+    {
+        using var m = Loader.Load(Fixture("init_check.wasm"));
+        Assert.Equal(99, m.Call("getValue"));
+    }
+
+    // SPEC §10 — the WASI-P1 shim lets an I/O library instantiate. wasi_io_50 imports
+    // wasi_snapshot_preview1.fd_write (it logs); without WASI it fails to instantiate.
+    [Fact]
+    public void WasiIo()
+    {
+        using var m = Loader.Load(Fixture("wasi_io_50.wasm"));
+        Assert.Equal(42, m.Call("logAndDouble", 21));
     }
 
     // Pattern — Bind (destructure): a named export as a standalone callable.

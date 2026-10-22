@@ -269,8 +269,10 @@ export function analyzerFindings(output: string): string[] {
 }
 
 // Rule 1 enforcement: the build fails on any RS0016/RS0017/RS0036/RS0037 (csproj WarningsAsErrors).
+// `--no-incremental`: the analyzer only reports when the compiler runs, and on exFAT (`D:`) an
+// incremental build has been seen to reuse stale output after a source edit (2026-10-22).
 function buildCheck(repo: string): { ok: boolean; findings: string[] } {
-  const r = run([dotnet(), "build", join(repo, PROJECT), "-c", "Release"], repo);
+  const r = run([dotnet(), "build", join(repo, PROJECT), "-c", "Release", "--no-incremental"], repo);
   const findings = analyzerFindings(r.output);
   if (r.code !== 0 && findings.length === 0) throw new GateError(`the build failed for another reason:\n${tail(r.output, 25)}`);
   return { ok: r.code === 0, findings };

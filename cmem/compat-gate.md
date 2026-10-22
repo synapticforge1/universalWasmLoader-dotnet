@@ -24,6 +24,10 @@ on 2026-10-22.** Both target frameworks (net8.0, net10.0) are checked against th
 build. The analyzer is `PrivateAssets="all"`: `dotnet pack` was checked to list only `Wasmtime` as a
 dependency.
 
+**The build check passes `--no-incremental`** (2026-10-22): the analyzer reports only when the
+compiler runs, and on exFAT an incremental build was seen to reuse stale output after an edit
+(best-practices L4).
+
 **Updating it:** `bun scripts/compat.ts surface` runs `dotnet format analyzers --diagnostics RS0016
 RS0037`, which appends new symbols to Unshipped. A removed symbol is reported by the build (RS0017);
 delete its Unshipped line, or add `*REMOVED*<line>` to Unshipped when it had shipped.
