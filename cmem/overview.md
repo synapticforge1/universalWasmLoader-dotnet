@@ -129,8 +129,12 @@ a future add (not required for SPEC §7 conformance).
   `jrmarcum`. Repo `universalWasmLoader-dotnet`, Workflow `publish.yml`, no environment) and the
   `NUGET_USER` GitHub repo secret (nuget.org profile name, not email).
 - **First publish:** **v0.1.0 published to nuget.org 2026-06-24**, from commit `f82e25b` (the
-  nuspec's `repository commit` is `04b1b6b`, the pre-rewrite hash of the same commit). **No tag was
-  ever made for it.**
+  nuspec's `repository commit` is `04b1b6b`, the pre-rewrite hash of the same commit), by a manual
+  `workflow_dispatch` run of `publish.yml`. Tagged `v0.1.0` → `f82e25b` and pushed 2026-10-22.
+- **0.1.1 is bumped, not released** (`daa9137`, 2026-10-22, through the gate at floor patch). Since
+  0.1.0 it carries no API change: the README Versioning section and test-command fix, the
+  PublicAPI analyzer (build-time only), tracked `tests/`, CI `validate`, and the new `RepositoryUrl`.
+  Releasing it = tag `v0.1.1` + publish a GitHub Release (owner's call).
 - **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate

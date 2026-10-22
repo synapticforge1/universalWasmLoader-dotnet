@@ -49,8 +49,13 @@ on nuget.org names `04b1b6b`, its pre-rewrite hash). Its tree has no `tests/` (g
 no PublicAPI files. Rule 3 is exempt for it; its Rule 1 baseline is the first committed
 `PublicAPI.Shipped.txt`, which was generated from library sources byte-identical to v0.1.0's
 (`git diff --stat f82e25b HEAD -- Callbacks.cs InstancePool.cs Loader.cs WasmModule.cs Wit.cs` was
-empty on 2026-10-22). **There is no `v0.1.0` tag yet** (none was ever pushed); until one exists at
-`f82e25b`, `report`/`bump`/`release` stop with "no v* tag is reachable".
+empty on 2026-10-22). **Tag `v0.1.0` → `f82e25b` pushed 2026-10-22** (owner): the commit whose
+`<Version>` is 0.1.0 and whose message matches the nuspec's `04b1b6b`; GitHub's run list shows 0.1.0
+was published by a `workflow_dispatch` run of `publish.yml` on `04b1b6b` (run 28137702082).
+
+**First real use (2026-10-22):** `bump patch` against v0.1.0 → allowed 0.1.0 → 0.1.1 at floor patch
+(API unchanged, 20 symbols; v0.1.0 exempt from Rule 3); only `<Version>` changed (`daa9137`, owner:
+"bump … and commit"). Not tagged, not released.
 
 **Consumers (Rule 3, second half):** no known NuGet package depends on `UniversalWasmLoader`.
 
@@ -86,9 +91,13 @@ was final; workspace 2.1):
 
 ## Not yet verified
 
-- **CI has never run the gate.** `validate.yml` is new; the `publish` steps (Bun 1.4.3 via
-  `oven-sh/setup-bun@v2`, `fetch-depth: 0`) run only on a published release.
-- **`release` in CI needs the `v0.1.0` tag on GitHub** at `f82e25b`, the owner's decision.
+- **`validate.yml` first ran 2026-10-22** on `62c8f44` (run 39820424737, ubuntu-latest): every step
+  `success` — Setup Bun, Test, self-test, PublicAPI check. Only the step CONCLUSIONS were read (the
+  public API); the logs' test/self-test COUNTS were not, since downloading logs needs an authenticated
+  `gh` (workspace 1.1: a conclusion is not the count).
+- The `publish` steps (Bun 1.4.3 via `oven-sh/setup-bun@v2`, `fetch-depth: 0`) run only on a
+  published release.
+- **`release` has never run in CI**: it runs on the first published GitHub Release (v0.1.1 or later).
 
 ## Traps met building it
 
