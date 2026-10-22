@@ -48,18 +48,18 @@ rewritten to the CURRENT `UniversalWasmLoader.csproj` (exactly one match, or the
 exit 0, M > 0, N = 0). On RED the last 15 lines are printed. Temp dirs and the worktree are always
 removed.
 
-**Reviewed exception — v0.1.0** (`UNGATED` in `compat.ts`): v0.1.0 = commit `f82e25b` (the nuspec
+**Reviewed exception — v0.1.0** (`UNGATED` in `compat.ts`): v0.1.0 = commit `d990087` (the nuspec
 on nuget.org names `04b1b6b`, its pre-rewrite hash). Its tree has no `tests/` (gitignored then) and
 no PublicAPI files. Rule 3 is exempt for it; its Rule 1 baseline is the first committed
 `PublicAPI.Shipped.txt`, which was generated from library sources byte-identical to v0.1.0's
-(`git diff --stat f82e25b HEAD -- Callbacks.cs InstancePool.cs Loader.cs WasmModule.cs Wit.cs` was
-empty on 2026-10-22). **Tag `v0.1.0` → `f82e25b` pushed 2026-10-22** (owner): the commit whose
+(`git diff --stat d990087 HEAD -- Callbacks.cs InstancePool.cs Loader.cs WasmModule.cs Wit.cs` was
+empty on 2026-10-22). **Tag `v0.1.0` → `d990087` pushed 2026-10-22** (owner): the commit whose
 `<Version>` is 0.1.0 and whose message matches the nuspec's `04b1b6b`; GitHub's run list shows 0.1.0
 was published by a `workflow_dispatch` run of `publish.yml` on `04b1b6b` (run 28137702082).
 
 **First real use (2026-10-22):** `bump patch` against v0.1.0 → allowed 0.1.0 → 0.1.1 at floor patch
-(API unchanged, 20 symbols; v0.1.0 exempt from Rule 3); only `<Version>` changed (`daa9137`, owner:
-"bump … and commit"). Tagged `v0.1.1` → `8978aaf` and pushed after `release` passed locally on
+(API unchanged, 20 symbols; v0.1.0 exempt from Rule 3); only `<Version>` changed (`c4f5e84`, owner:
+"bump … and commit"). Tagged `v0.1.1` → `7451a46` and pushed after `release` passed locally on
 the tagged HEAD; the GitHub Release (which runs `release` in CI) awaits the owner.
 
 **Consumers (Rule 3, second half):** no known NuGet package depends on `UniversalWasmLoader`.
@@ -85,18 +85,18 @@ not block: Rule 3 is required only below a major floor.
 was final; workspace 2.1):
 
 - `bump` re-sorted `PublicAPI.Shipped.txt` ordinally, so a no-change release rewrote 3 lines →
-  fold keeps order and appends (`6b6e07a`; self-test: an empty fold is byte-identical).
+  fold keeps order and appends (`bec8fb8`; self-test: an empty fold is byte-identical).
 - analyzer findings were cut at the first `[`, hiding the end of `object?[]` symbols → pure
-  `analyzerFindings` with self-test cases (`9b9f29a`).
+  `analyzerFindings` with self-test cases (`3d9055c`).
 - the csproj listed `PublicAPI.*.txt` as AdditionalFiles although the package already does; `dotnet
   format` then reported duplicate source files and silently skipped the RS0016 fix, so `surface`
-  could not record a new symbol → explicit items removed (`e4c02b3`). The build check was unaffected.
+  could not record a new symbol → explicit items removed (`3f6bd29`). The build check was unaffected.
 - (C# version, before the Bun port) a csproj comment containing `--` made the project unloadable;
   caught by the gate's first surface run (best-practices L1).
 
 ## Not yet verified
 
-- **`validate.yml` first ran 2026-10-22** on `62c8f44` (run 39820424737, ubuntu-latest): every step
+- **`validate.yml` first ran 2026-10-22** on `f608dc0` (run 39820424737, ubuntu-latest): every step
   `success` — Setup Bun, Test, self-test, PublicAPI check. Only the step CONCLUSIONS were read (the
   public API); the logs' test/self-test COUNTS were not, since downloading logs needs an authenticated
   `gh` (workspace 1.1: a conclusion is not the count).

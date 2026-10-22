@@ -221,9 +221,9 @@ const SHIPPED = "PublicAPI.Shipped.txt";
 const UNSHIPPED = "PublicAPI.Unshipped.txt";
 
 // Releases published before this gate existed (reviewed exceptions, 2026-10-22). v0.1.0 = commit
-// f82e25b: its tree has no tests/ (gitignored then) and no PublicAPI files. Its surface is the
+// d990087: its tree has no tests/ (gitignored then) and no PublicAPI files. Its surface is the
 // first committed PublicAPI.Shipped.txt, generated from library sources byte-identical to v0.1.0's
-// (`git diff f82e25b <that commit> -- *.cs` at the root is empty; cmem/compat-gate.md).
+// (`git diff d990087 <that commit> -- *.cs` at the root is empty; cmem/compat-gate.md).
 const UNGATED = new Set(["v0.1.0"]);
 
 const repoRoot = () => git(process.cwd(), "rev-parse", "--show-toplevel");
@@ -506,7 +506,7 @@ function selftest(): number {
   check("tests: counts summed over runs", judgeTests("Failed: 0, Passed: 3\nFailed: 0, Passed: 4", 0).summary.startsWith("7 passed"));
 
   const rs =
-    "D:\\r\\WasmModule.cs(70,5): error RS0017: Symbol 'UniversalWasmLoader.WasmModule.Bind(string! name) -> System.Func<object?[]!, object?>!' is part of the declared API, but is either not public or could not be found (https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/PublicApiAnalyzers/PublicApiAnalyzers.Help.md) [D:\\r\\UniversalWasmLoader.csproj::TargetFramework=net8.0]";
+    "src\\WasmModule.cs(70,5): error RS0017: Symbol 'UniversalWasmLoader.WasmModule.Bind(string! name) -> System.Func<object?[]!, object?>!' is part of the declared API, but is either not public or could not be found (https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/PublicApiAnalyzers/PublicApiAnalyzers.Help.md) [src\\UniversalWasmLoader.csproj::TargetFramework=net8.0]";
   const findings = analyzerFindings(`${rs}\r\n${rs.replace("net8.0", "net10.0")}\nerror CS0103: unrelated`);
   check(
     "analyzer: full symbol kept through []",

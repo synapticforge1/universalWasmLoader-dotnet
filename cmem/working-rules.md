@@ -11,8 +11,8 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   are `scripts/*.ts`, run as `bun scripts/<name>.ts` (Bun 1.4.3 locally and in CI).
 - **The rule changed three times on 2026-10-22; this repo followed each:** "language first" (C#
   file-based apps) → "committed scripts only" → "no mechanism that builds an executable" (C# →
-  Bun). The compatibility gate was first written as `scripts/compat.cs` (local commit `4d9ac63`,
-  never pushed) and ported to `scripts/compat.ts` in `e845238` before anything was published; no
+  Bun). The compatibility gate was first written as `scripts/compat.cs` (local commit `51c447f`,
+  never pushed) and ported to `scripts/compat.ts` in `0874746` before anything was published; no
   proof-of-equivalence was owed, since no C# version was ever in use. History: P6 in
   `../../cmem/divergences.md`.
 - **`dotnet-script` (`.csx`) was tried 2026-10-22 and does not run here** (owner installed 2.0.1):
@@ -33,7 +33,7 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   development machine; see [overview.md](overview.md) → "Toolchain". `compat.ts` picks `$UWL_DOTNET`,
   else `dotnet10` when on PATH, else `dotnet` (CI).
 - **Letter H15 (workspace `handoffs.md`) — closed by the workspace 2026-10-22** on this repo's
-  earlier record ("nothing to port", checked at `f81cb55` = `d6c1525` after the history rewrite;
+  earlier record ("nothing to port", checked at `f81cb55` = `9bb0742` after the history rewrite;
   `git grep -i -E 'deno|\bbun\b|\bnode\b|npx'` matched nothing; the word boundaries matter: without
   them `bun` matches `ubuntu-latest`). The repo has since gained its first committed script,
   `scripts/compat.ts`, which conforms.

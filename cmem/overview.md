@@ -17,11 +17,11 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 
 - **Canonical home:** **https://github.com/synapticforge1/universalWasmLoader-dotnet**. The owner
   moved it from the personal `jrmarcum` account to the `synapticforge1` org, which the owner controls.
-  Checked 2026-10-20: `git ls-remote` on the new URL returns HEAD `04b1b6b` (now `f82e25b`, see the
+  Checked 2026-10-20: `git ls-remote` on the new URL returns HEAD `04b1b6b` (now `d990087`, see the
   2026-10-22 history rewrite below), the same as the local `main`. The reference loader moved too: **`synapticforge1/universalWasmLoader-js`**. The -c and -dart
   ports are already there as well.
 - **URLs repointed 2026-10-20:** the local `origin` remote now uses the org URL. Commit `f652704`
-  (now `6d8e7b4`; pushed) updates the `UniversalWasmLoader.csproj` `<RepositoryUrl>` and the README
+  (now `de0faea`; pushed) updates the `UniversalWasmLoader.csproj` `<RepositoryUrl>` and the README
   link to the JS loader. The `RepositoryUrl` goes into the NuGet package metadata, so nuget.org shows
   the new URL only from the next published version.
 - **NuGet Trusted Publishing after the transfer:** the owner reports (2026-10-20) that nuget.org
@@ -132,13 +132,13 @@ a future add (not required for SPEC §7 conformance).
   (Owner `synapticforge1` since the 2026-10-20 move, which nuget.org updated itself; originally
   `jrmarcum`. Repo `universalWasmLoader-dotnet`, Workflow `publish.yml`, no environment) and the
   `NUGET_USER` GitHub repo secret (nuget.org profile name, not email).
-- **First publish:** **v0.1.0 published to nuget.org 2026-06-24**, from commit `f82e25b` (the
+- **First publish:** **v0.1.0 published to nuget.org 2026-06-24**, from commit `d990087` (the
   nuspec's `repository commit` is `04b1b6b`, the pre-rewrite hash of the same commit), by a manual
-  `workflow_dispatch` run of `publish.yml`. Tagged `v0.1.0` → `f82e25b` and pushed 2026-10-22.
-- **0.1.1 is bumped, not released** (`daa9137`, 2026-10-22, through the gate at floor patch). Since
+  `workflow_dispatch` run of `publish.yml`. Tagged `v0.1.0` → `d990087` and pushed 2026-10-22.
+- **0.1.1 is bumped, not released** (`c4f5e84`, 2026-10-22, through the gate at floor patch). Since
   0.1.0 it carries no API change: the README Versioning section and test-command fix, the
   PublicAPI analyzer (build-time only), tracked `tests/`, CI `validate`, and the new `RepositoryUrl`.
-  **Tagged `v0.1.1` → `8978aaf` and pushed 2026-10-22** (owner: "all of them"), after `bun
+  **Tagged `v0.1.1` → `7451a46` and pushed 2026-10-22** (owner: "all of them"), after `bun
   scripts/compat.ts release` passed locally on the tagged HEAD (floor patch). **The GitHub Release
   is NOT published yet:** `gh` is not authenticated on this machine (no `GH_TOKEN`), so the owner
   publishes it (web UI: Releases → Draft a new release → tag `v0.1.1` → Publish). Publishing runs
@@ -146,9 +146,10 @@ a future add (not required for SPEC §7 conformance).
 - ✅ **0.1.1 PUBLISHED to nuget.org 2026-10-22** — run 39821337557 attempt 3 (re-run after the
   owner fixed the trusted-publishing policy on nuget.org; details of the fix are the owner's):
   every step `success`, including the release gate, NuGet login and push. The 0.1.1 nuspec names
-  `https://github.com/synapticforge1/universalWasmLoader-dotnet` at commit `8978aaf` (= tag
-  `v0.1.1`), so the old-URL item and the pre-rewrite SourceLink commit are both superseded from
-  0.1.1 on (0.1.0's metadata still names `jrmarcum` / `04b1b6b`, immutable). The flat-container
+  `https://github.com/synapticforge1/universalWasmLoader-dotnet` at commit `8978aaf` — the tag's
+  hash at publish time; the second purge (below) made it `7451a46`, same tree. So the old-URL item
+  is superseded from 0.1.1 on, but both published packages now name a commit the repo no longer
+  has (0.1.0: `jrmarcum` / `04b1b6b`; 0.1.1: `8978aaf`); nuget.org metadata is immutable. The flat-container
   listed 0.1.0, 0.1.1 right away; the registration index still showed only 0.1.0 a few minutes
   later (indexing lag, not re-checked). **Note:** GitHub's "Re-run" keeps the run id and bumps
   `run_attempt`; a watcher must not filter re-runs out by id.
@@ -199,19 +200,39 @@ a future add (not required for SPEC §7 conformance).
   email replaced by the GitHub noreply `81428316+jrmarcum@users.noreply.github.com` (public account
   id), also set as this repo's local `user.email`. Verified: no hits in any tree, message or metadata;
   final tree identical to before. Force-pushed with a lease on the old head; `origin/main` =
-  `8fac2db`. Old objects pruned locally; the pre-rewrite history is kept privately as a bundle in
+  `7b08f43`. Old objects pruned locally; the pre-rewrite history is kept privately as a bundle in
   the workspace's machine-local `cmem/local/backups/` (never committed anywhere). **Every hash changed** — old → new: `1588c76`→`e063d64`,
-  `e6c928f`→`46f8f3b`, `c2224f1`→`0698e13`, `98dcf2f`→`f1623bd`, `de56961`→`06a6934`,
-  `04b1b6b`→`f82e25b`, `f652704`→`6d8e7b4`, `1c0daf9`→dropped, `f81cb55`→`d6c1525`,
-  `d8f0707`→`8fac2db`. **Not in our control:** GitHub can still serve the old commits by hash until
+  `e6c928f`→`46f8f3b`, `c2224f1`→`6e454c7`, `98dcf2f`→`6e21617`, `de56961`→`142dc21`,
+  `04b1b6b`→`d990087`, `f652704`→`de0faea`, `1c0daf9`→dropped, `f81cb55`→`9bb0742`,
+  `d8f0707`→`7b08f43`. **Not in our control:** GitHub can still serve the old commits by hash until
   its own garbage collection (full purge = a GitHub Support request), and nuget.org's v0.1.0 package
-  metadata/SourceLink names the old pre-rewrite commit. ⚠️ **Scope gap found later the same day:**
-  the workspace's wider definition (letter H18: ANY absolute machine path) still finds paths in
-  `0698e13`/`f1623bd` — see [open-work.md](open-work.md).
+  metadata/SourceLink names the old pre-rewrite commit.
+- **Second purge, same day (owner: "yes purge", 2026-10-22), for workspace letter H18's wider
+  definition (ANY absolute path on the owner's machines).** A scan of every commit on `main` and
+  both tags found real paths in two blobs only: the old `CLAUDE.md`'s safe.directory line (a drive
+  path to an old checkout; commits now `6e454c7`, `6e21617`) and the 2026-06-17 `cmem/overview.md`
+  (the system-wide `dotnet` install path and a home-relative SDK path; now `6e21617`). Everything
+  else the scan matched was not a path (URLs, regex text, the word "scoop", a folder name, generic
+  `%TEMP%`, rule text with `…` placeholders). `git filter-branch --index-filter` swapped exactly
+  those two blob ids for cleaned copies (`<repo-path>`; "the system-wide install"; "the scoop
+  install of `dotnet-sdk`"), `--tag-name-filter cat -- main v0.1.0 v0.1.1`. Verified: 23 → 23
+  commits; the trees of `main`, `v0.1.0` and `v0.1.1` byte-identical to before; the two old blobs
+  unreachable; authors, dates and messages identical on all 23 (checked with a positive control);
+  no real path in any commit. Force-pushed with a lease on each ref (main `de3dd8e`→`8e66eaf`,
+  `v0.1.0` → `d990087`, `v0.1.1` → `7451a46`); old objects pruned. **Map (old → new):**
+  `e063d64`, `46f8f3b` unchanged; `0698e13`→`6e454c7`, `f1623bd`→`6e21617`, `06a6934`→`142dc21`,
+  `f82e25b`→`d990087`, `6d8e7b4`→`de0faea`, `d6c1525`→`9bb0742`, `8fac2db`→`7b08f43`,
+  `7f37a8e`→`adfe5cc`, `4d9ac63`→`51c447f`, `e845238`→`0874746`, `6b6e07a`→`bec8fb8`,
+  `9b9f29a`→`3d9055c`, `e4c02b3`→`3f6bd29`, `62c8f44`→`f608dc0`, `daa9137`→`c4f5e84`,
+  `8978aaf`→`7451a46`, `6421d44`→`0efec13`, `558fd24`→`cfea43c`, `06029d2`→`5f89af4`,
+  `710108c`→`de3dd8e`, `1d12745`→`8e66eaf`. All hashes cited in `cmem/` and `scripts/` were
+  rewritten to the new ones, except quotes of published nuget.org metadata. A private bundle of
+  the pre-purge state is in the workspace's machine-local `cmem/local/backups/`. GitHub keeps
+  serving old commits by hash until its own GC (full purge = a GitHub Support request).
 - **`CLAUDE.md` cut to a pointer (L2, 2026-10-22).** Its body still described an empty repo ("No
   source code or project files exist yet"), bare `dotnet`, and an outdated local checkout path. Now: the
   handoffs line, pointers into `cmem/`, the triggers, three things that bite, current state. Archive:
-  `git show 0698e13:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
+  `git show 6e454c7:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
   live in "Repository home" above).
 - **Repo rules (2026-10-22):** LF line endings enforced by `.gitattributes` + `.editorconfig`; committed
   repeated-use scripts are TypeScript run by Bun (C# file-based apps build an executable, which the
