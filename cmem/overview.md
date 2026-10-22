@@ -147,10 +147,19 @@ a future add (not required for SPEC §7 conformance).
   cause: the repo transfer — the OIDC token now says repository owner `synapticforge1`, and the
   policy's GitHub repository-owner field (or `NUGET_USER`) no longer matches. **This contradicts the
   2026-10-20 note above that the policy "needed no manual change"**; that note was about the
-  policy's nuget.org owner, not its GitHub fields (unverified either way from here). Owner to check
-  on nuget.org: policy GitHub fields = `synapticforge1` / `universalWasmLoader-dotnet` /
-  `publish.yml` / no environment; `NUGET_USER` = the policy CREATOR's nuget.org username; else
-  create a new policy. Then re-run `publish.yml` on `v0.1.1` (safe: `--skip-duplicate`).
+  policy's nuget.org owner, not its GitHub fields.
+  **Most likely cause, from NuGet's docs** (learn.microsoft.com/nuget/nuget-org/trusted-publishing,
+  § "Policies Pending Full Activation"): "NuGet needs GitHub repository and owner IDs to lock the
+  policy to the original repo and owner … Once a successful publish provides the IDs …, the policy
+  becomes permanently active." v0.1.0's successful publish (2026-06-25) locked the policy to owner ID
+  **81428316** (user `jrmarcum`); the repo now belongs to org `synapticforge1`, owner ID
+  **342141589** (repository ID 1243565389; checked via the GitHub API 2026-10-22). Renaming the
+  policy's owner field cannot change the locked ID. **Fix: a NEW policy** (Repository Owner
+  `synapticforge1`, Repository `universalWasmLoader-dotnet`, Workflow File `publish.yml`, no
+  environment), `NUGET_USER` = the nuget.org username of whoever CREATES it, delete the old one,
+  re-run `publish.yml` on `v0.1.1` (safe: `--skip-duplicate`). A second paste of the same error
+  (2026-10-22) matched no new run: still run 39821337557. **Applies to every repo moved to the org
+  that publishes through a trusted-publishing policy** (cf. -js, -c, -dart registries).
 - **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate
