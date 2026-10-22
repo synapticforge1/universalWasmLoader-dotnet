@@ -10,7 +10,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <PackageId>UniversalWasmLoader</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Jon Marcum</Authors>
     <Description>WIT-aware WebAssembly loader for .NET — the Go/JS/Rust sibling port. Loads a .wasm library, reads its companion .wit, and exposes each export as a type-safe .NET call with Canonical-ABI marshalling. Built on Wasmtime.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
