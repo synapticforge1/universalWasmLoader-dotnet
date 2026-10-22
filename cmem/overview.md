@@ -134,7 +134,11 @@ a future add (not required for SPEC §7 conformance).
 - **0.1.1 is bumped, not released** (`daa9137`, 2026-10-22, through the gate at floor patch). Since
   0.1.0 it carries no API change: the README Versioning section and test-command fix, the
   PublicAPI analyzer (build-time only), tracked `tests/`, CI `validate`, and the new `RepositoryUrl`.
-  Releasing it = tag `v0.1.1` + publish a GitHub Release (owner's call).
+  **Tagged `v0.1.1` → `8978aaf` and pushed 2026-10-22** (owner: "all of them"), after `bun
+  scripts/compat.ts release` passed locally on the tagged HEAD (floor patch). **The GitHub Release
+  is NOT published yet:** `gh` is not authenticated on this machine (no `GH_TOKEN`), so the owner
+  publishes it (web UI: Releases → Draft a new release → tag `v0.1.1` → Publish). Publishing runs
+  `publish.yml`: tests, self-test, the release gate, then pack + push 0.1.1 to nuget.org.
 - **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate

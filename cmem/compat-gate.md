@@ -55,7 +55,8 @@ was published by a `workflow_dispatch` run of `publish.yml` on `04b1b6b` (run 28
 
 **First real use (2026-10-22):** `bump patch` against v0.1.0 → allowed 0.1.0 → 0.1.1 at floor patch
 (API unchanged, 20 symbols; v0.1.0 exempt from Rule 3); only `<Version>` changed (`daa9137`, owner:
-"bump … and commit"). Not tagged, not released.
+"bump … and commit"). Tagged `v0.1.1` → `8978aaf` and pushed after `release` passed locally on
+the tagged HEAD; the GitHub Release (which runs `release` in CI) awaits the owner.
 
 **Consumers (Rule 3, second half):** no known NuGet package depends on `UniversalWasmLoader`.
 
