@@ -32,11 +32,11 @@
 
   <!-- Compatibility gate Rule 1: the public API is declared in PublicAPI.Shipped.txt (as of the last
        release) + PublicAPI.Unshipped.txt (since), and a build fails when the code disagrees with
-       them. Build-time only: PrivateAssets keeps it out of the package's dependencies. -->
+       them. Build-time only: PrivateAssets keeps it out of the package's dependencies. The package
+       adds both files as AdditionalFiles itself; listing them again here duplicates them, and
+       `dotnet format` then silently skips the fix that adds new symbols. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.0.0" PrivateAssets="all" />
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
   <PropertyGroup>
