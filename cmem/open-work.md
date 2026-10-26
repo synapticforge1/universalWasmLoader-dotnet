@@ -34,6 +34,8 @@ belong to the workspace session are listed only while not yet done there.
 loader-dotnet; H15 closed again; H18/H19 for loader-dotnet; the P6 rows and sentence; the NuGet
 transfer lesson, now letter H20 and `layout-and-packaging.md`.)
 
-(Answered 2026-10-26 in the workspace ledger `../../cmem/workspace-correspondence.md`, for the
-workspace to verify and close: H7 / C11 fixture re-stamp, H16, H22, H24, H25 (d), H27, H28, C8;
-row C16 carries this repo's notes.)
+- **Ledger answers to verify and close** (2026-10-26, in `../../cmem/workspace-correspondence.md`):
+  H7 / C11 fixture re-stamp, H16, H22, H24, H25 (d), H27, H28, C8 — all in `3e58efc`, pushed
+  2026-10-26 (`origin/main` = `3e58efc`, read back with `ls-remote`); row C16 carries this repo's
+  notes (the `.wit` finding, L5's gc hazard, the pull line). Only the rows' creators close them.
+  CI on `3e58efc` not checked here (`gh` not logged in).

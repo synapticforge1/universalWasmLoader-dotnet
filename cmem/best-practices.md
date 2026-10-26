@@ -27,6 +27,14 @@ with the next free number; numbers are never reused.
   the edit was not rebuilt; `--no-incremental` gave the true result (`WasiIo` fails). The gate's
   build check now always passes `--no-incremental` (2026-10-22, [compat-gate.md](compat-gate.md)).
   Force a rebuild whenever a build's output is the evidence. [universalWasmLoader-dotnet; cf. L1]
+- **L5 After a history purge, `gc --prune=now` can leave a commit-graph naming the pruned commits;
+  rebuild it, and run `fsck` after every prune.** H16's prune removed the 7 pre-purge commits, but
+  `.git/objects/info/commit-graph` still listed them: `gc` and `fsck` printed "Could not read …
+  for commit-graph", `fsck` exited 16, and the `&&` chain silently skipped the config step that
+  followed. Fix: delete that file, `git commit-graph write --reachable` → fsck 0. Before pruning,
+  confirm every object about to go is in a backup bundle (`cat-file -e` in a scratch clone), and
+  grep memory for pre-purge ids the prune will break (`CLAUDE.md` cited `0698e13`)
+  (2026-10-26, ledger C16). [universalWasmLoader-dotnet; cf. workspace 7.3]
 
 ## ★ The workspace's convergent rules — a COPY, stamped 2026-10-26 (workspace letter H6)
 

@@ -230,11 +230,21 @@ a future add (not required for SPEC §7 conformance).
   rewritten to the new ones, except quotes of published nuget.org metadata. A private bundle of
   the pre-purge state is in the workspace's machine-local `cmem/local/backups/`. GitHub keeps
   serving old commits by hash until its own GC (full purge = a GitHub Support request).
+- **Pre-purge commits pruned locally (2026-10-26, H16).** `git gc --prune=now` removed the 7
+  commits unreachable since the purges (`0698e13`, `06a6934`, `6d8e7b4`, `8fac2db`, `d6c1525`,
+  `f1623bd`, `f82e25b`); each was first confirmed present in the private
+  `…-before-rewrite2-2026-10-22.bundle`. So a pre-purge id no longer resolves in this clone: look it
+  up in the map above. `maintenance.strategy gc` set; 1 pack / 99.87 KiB; fsck clean after the
+  commit-graph repair (best-practices L5).
 - **`CLAUDE.md` cut to a pointer (L2, 2026-10-22).** Its body still described an empty repo ("No
   source code or project files exist yet"), bare `dotnet`, and an outdated local checkout path. Now: the
-  handoffs line, pointers into `cmem/`, the triggers, three things that bite, current state. Archive:
+  pull line, pointers into `cmem/`, the triggers, three things that bite, current state. Archive:
   `git show 6e454c7:CLAUDE.md` (last tracked; later additions were only the repo-URL lines, which
-  live in "Repository home" above).
+  live in "Repository home" above). **Pull line revised 2026-10-26** (owner's "yes"; the ledger's
+  rule): read the workspace's `cmem/workspace-correspondence.md` at session start and before each new
+  work item, then the letter in `handoffs.md`; answers go in the row's "full text" cell, only the
+  row's creator closes it. The pointer had cited the pre-purge `0698e13` for the archive until the
+  same day.
 - **Repo rules (2026-10-22):** LF line endings enforced by `.gitattributes` + `.editorconfig`; committed
   repeated-use scripts are TypeScript run by Bun (C# file-based apps build an executable, which the
   workspace rule excludes); one-time scratchpad scripts may be any language; no secrets or personal
