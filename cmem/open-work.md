@@ -1,14 +1,9 @@
-# open-work.md — what is still open (2026-10-22)
+# open-work.md — what is still open (2026-10-26)
 
 One line per item; done items are removed (their record lives in the topic file named). Items that
 belong to the workspace session are listed only while not yet done there.
 
 ## Waiting on the owner
-
-- **wasmtk `f50c8e4` is not on GitHub** (the fixture generator's commit). Under H19's order,
-  wasmtk purges and pushes first, loader-js re-stamps the fixtures from a pushed commit, then the
-  ports copy: expect to re-copy `tests/*.wasm`, `*.wit`, `*.wat` and `fixtures.json` from -js then
-  (`bun scripts/fixtures.ts` must pass after).
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
@@ -22,6 +17,12 @@ belong to the workspace session are listed only while not yet done there.
 
 - **Source-generator typed interface** (PORT_PROMPT item 4): not built; not required for SPEC
   conformance; `Bind` covers the destructure pattern. ([overview.md](overview.md) → "Public API")
+- **`TryFetchWit` swallows every error** (`Loader.cs:266-275`, found 2026-10-26 checking loader-js's
+  masked-HTTP-error finding, by reading, not running): a 500, timeout or TLS failure on the `.wit`
+  is indistinguishable from "no `.wit`", and the load falls back to raw mode (★ 4.3 class). The
+  `.wasm` fetch is NOT affected (`GetByteArrayAsync` throws on a non-success status). Decide
+  against SPEC 3.0.0's rule for an unreachable `.wit` (likely: only 404 means absent); test with a
+  local server.
 
 ## Waiting on the workspace session (this repo's side is done)
 
@@ -32,3 +33,7 @@ belong to the workspace session are listed only while not yet done there.
 (Checked done in the workspace 2026-10-22 and removed here: H6, H7 and drift L1–L3 for
 loader-dotnet; H15 closed again; H18/H19 for loader-dotnet; the P6 rows and sentence; the NuGet
 transfer lesson, now letter H20 and `layout-and-packaging.md`.)
+
+(Answered 2026-10-26 in the workspace ledger `../../cmem/workspace-correspondence.md`, for the
+workspace to verify and close: H7 / C11 fixture re-stamp, H16, H22, H24, H25 (d), H27, H28, C8;
+row C16 carries this repo's notes.)

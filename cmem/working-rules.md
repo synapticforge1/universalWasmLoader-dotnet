@@ -56,11 +56,21 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
 
 - 🔒 Nothing committed may hold a secret or personal information: secrets by NAME only, never a
   value; no personal emails or machine facts (those go in the workspace's
-  `cmem/local/environment.md`). **Any absolute path on the owner's machines is personal
-  information** (owner clarification 2026-10-22, workspace letter H18): `D:\Programs\…`,
-  `C:\Users\…`, scoop/AppData/Temp paths, home-relative ones included — not only user-named paths.
-  Use repo-relative paths or placeholders (`<repo-root>`). Check every commit with
-  `git grep -n -I -i -E '[A-Za-z]:[\\/](Programs|Users)|AppData|scoop|\\Temp\\|@gmail'` (and before
-  pushing, `git grep … origin/main`).
-- Commits are authored with the GitHub noreply address (this repo's local `user.email`); the
-  2026-10-22 history rewrite is in [overview.md](overview.md) → "Build / release flow".
+  `cmem/local/environment.md`). Applies to files, commit messages, the package and issues.
+- 🔒 **The path test is "machine-specific?"** (owner, 2026-10-23, workspace letter H22): a path
+  that records the layout of one of the owner's machines is personal information —
+  `D:\Programs\…`, `C:\Users\…`, scoop / AppData / Temp paths, home-relative ones included, not
+  only user-named paths (H18). A convention path that names nothing about one machine (e.g.
+  `%USERPROFILE%\.nuget\packages`, `C:\zig-cache\wazmrt`) is fine. Use repo-relative paths or
+  placeholders (`<repo-root>`).
+- 🔒 **One maintainer contact address is allowed, in three places only** (owner, 2026-10-23/26,
+  letter H28): the manifest field a package registry reads, the git author/committer address, and
+  ONE committed `cmem/` note naming the maintainer contact. Here: commits use the GitHub noreply
+  address (this repo's local `user.email`); `UniversalWasmLoader.csproj` has `<Authors>` and no
+  email field; there is no contact note. Nowhere else.
+- **Scan text AND binaries** (`-a`, not `-I`: wasmtk and binaryang found paths in committed
+  `.wasm` debug info that every `-I` scan skipped, 2026-10-26): before every commit,
+  `git grep -n -a -i -E '[A-Za-z]:[\\/](Programs|Users)|AppData|scoop|\\Temp\\|@gmail'` (and before
+  pushing, `git grep … origin/main`). Hits at 2026-10-26, all reviewed and none a path: this
+  rule's own text and the purge record's prose in [overview.md](overview.md) (the word "scoop").
+- The 2026-10-22 history rewrites are in [overview.md](overview.md) → "Build / release flow".

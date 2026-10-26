@@ -2,9 +2,9 @@
   "$comment": "Reference fixtures for every universal-wasm-loader port: copy these bytes unmodified (SPEC §7) and verify them against this file. Written by scripts/regen-fixtures.ts; do not edit by hand.",
   "generator": {
     "tool": "wasmtk modc",
-    "repository": "https://github.com/jrmarcum/wasmtk",
-    "commit": "f50c8e419a0652558a902e6fc2332915184cae3b",
-    "describe": "v2.0.3-64-gf50c8e419a0",
+    "repository": "https://github.com/synapticforge1/wasmtk",
+    "commit": "4a5c3cf668da2c5c6e2cde444851773b5d4f4a08",
+    "describe": "v2.0.3-64-g4a5c3cf",
     "committed": "2026-10-09T20:13:12-04:00",
     "command": "deno run -A --no-lock --config deno.json main.ts modc tests/module/bindgen_fixtures/<name>.ts -n <name>.wasm"
   },

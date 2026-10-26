@@ -98,15 +98,16 @@ a future add (not required for SPEC §7 conformance).
   stamp; 7/7 pass, and the test output dir was checked to hold the stamped bytes (`Copy-Item` keeps
   the source's older mtime, and the test csproj copies with `PreserveNewest`, so check this after any
   re-copy). Before: the four `.wasm` differed from the stamp, the four `.wit` matched; old set backed
-  up only in that session's scratchpad. **Open:**
-  - **The generator pin is not public yet:** `f50c8e4` is on wasmtk's local `main` but not on
-    GitHub. wasmtk moved to **`synapticforge1/wasmtk`** (owner, 2026-10-22), but re-checked the same
-    day with `ls-remote` (read-only): its `main` is still `673d7e3` (2026-09-29), none of its 153
-    branches/tags contains `f50c8e4`, and local `main` is 131 commits ahead. It becomes pinnable when
-    wasmtk's `main` is pushed (the owner's call, in wasmtk). -js says the ports copy once it is
-    pinnable; copied early on owner direction (`tests/` was local-only then; tracked since the
-    gate commit, 2026-10-22). The stamp's `generator.repository` still names `jrmarcum/wasmtk`
-    (GitHub redirects; -js owns the stamp).
+  up only in that session's scratchpad.
+  - **Re-stamped 2026-10-26 (H7 / C11 / drift X8):** wasmtk purged its history twice, so the
+    generator `f50c8e4` (2026-10-22: on wasmtk's local `main` only, never on GitHub) became
+    `84b3e180eba`, then `4a5c3cf668d`, which is on wasmtk `origin/main`. loader-js re-stamped from it
+    in `36aa661` (on its `origin/main`) with every fixture byte unchanged; this repo COPIED that
+    `tests/fixtures.json` verbatim — `generator.repository` / `commit` / `describe` now
+    `synapticforge1/wasmtk`, `4a5c3cf668da…`, `v2.0.3-64-g4a5c3cf`. Copied, not regenerated:
+    `describe`'s abbreviation length depends on the clone (loader-dart's finding, C15). All 12
+    fixture files byte-identical to -js (`cmp`), `bun scripts/fixtures.ts` 12/12, `dotnet10 test
+    tests` 9/9.
   - **Hash check: `bun scripts/fixtures.ts`** (2026-10-22; same rule as -js
     `scripts/check-fixtures.ts`): every stamped file present and sha256-identical, no unstamped
     `.wasm`/`.wit`/`.wat` in `tests/`. Runs in CI `validate.yml`. Inverted on a copy (one flipped
