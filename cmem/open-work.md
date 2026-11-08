@@ -26,9 +26,6 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Waiting on the owner
 
-- **Workspace tooling table:** its C# row still reads "C# → Bun". Ledger row C32 proposes "C# →
-  `.csx` via a pinned local dotnet-script". That is the workspace's file, the owner's change.
-
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
   `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` added 2026-11-08, also post-purge), no LFS; old commits still served by hash (e.g.
@@ -62,7 +59,10 @@ belong to the workspace session are listed only while not yet done there.
 2026-11-08: 0.2.0 published, C30's split, keep-or-drop `net8.0` (dropped); record in
 [overview.md](overview.md) → "Build / release flow". Also done 2026-11-08: the scripts moved
 from Bun to `.csx` via the pinned local dotnet-script; record in
-[working-rules.md](working-rules.md) → "Committed scripts".)
+[working-rules.md](working-rules.md) → "Committed scripts". Done 2026-11-08 on the owner's
+"proceed": the workspace tooling table's C# row now reads `.csx` via a repo-local dotnet-script
+(its `working-rules.md`, `CLAUDE.md`, `goals.md` and `divergences.md` P6; ledger row C32). Done
+the same day: user `MSBuildSDKsPath` removed, so the versions stay separated by command.)
 
 ## Waiting on the workspace session (this repo's side is done)
 
