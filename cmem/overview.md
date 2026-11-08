@@ -45,16 +45,17 @@ before writing the port.
 runtime-only install with no SDK. Where `dotnet10` comes from is a machine fact, kept out of this
 committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22: `dotnet10 --version`
 → 10.0.402. Build, test and pack go through it; committed scripts are Bun (`bun scripts/<name>.ts`,
-[working-rules.md](working-rules.md)). The test project
-targets **net8.0;net9.0;net10.0** (every supported line since 2026-11-07, see "Tests"); the
-library multi-targets **net8.0;net10.0** for consumers.
+[working-rules.md](working-rules.md)). Library and test
+project target **net10.0** only, from 0.2.0 (owner, 2026-11-07; 0.1.x was net8.0;net10.0). See
+"Tests" for the rule that decides which lines must be tested.
 
-## Current state — 0.2.0 (SPEC 4.0.0) tagged and pushed 2026-11-07; nuget.org publish pending
+## Current state — 0.2.0 (SPEC 4.0.0, .NET 10 only), 2026-11-07
 
 Re-aligned to SPEC 4.0.0 on 2026-11-07 (workspace row C29): `d5b50c1` (surface re-baseline alone)
 and `9e131b2` (behaviour + tests). **0.2.0** (gate floor major; pre-1.0 Rule 6 minor; README
-Breaking Changes row): release commit `93cb185` = tag `v0.2.0`, pushed. nuget.org still serves
-0.1.1 until the GitHub Release is published ("Build / release flow"). Source (namespace `UniversalWasmLoader`):
+Breaking Changes row): bumped in `93cb185`; .NET 10 only and publish-on-tag-push in `eca6c78`.
+The publish run's outcome is in [open-work.md](open-work.md) ("Build / release flow" has the
+history). Source (namespace `UniversalWasmLoader`):
 
 - `Wit.cs` — the strict WIT parser: a port of loader-js 2.0.0's `wit-parser.js`, with the same
   grammar (SPEC §2 "Parsing") and the same messages, as `FormatException`. An unknown type is an
@@ -129,25 +130,27 @@ a future add (not required for SPEC §7 conformance).
 
 ## Tests
 
-- **Every supported .NET line, LTS and STS (owner, 2026-11-07: "yes", asked "like the -js
-  version").** The test project targets `net8.0;net9.0;net10.0`. `net9.0` resolves the library's
-  `net8.0` asset, as a .NET 9 consumer would; checked by hash, and net10.0 gets the `net10.0`
-  asset. `validate.yml` installs SDKs 8.0.x / 9.0.x / 10.0.x and runs `dotnet test tests` (each
-  target). **`bun scripts/runtimes.ts`** (Bun, workspace rule 1; modelled on -js's
-  `check-lts.ts`) reads Microsoft's `releases-index.json` and fails when a supported line (phase
-  `active` / `maintenance`, EOL not passed) is missing from the test targets or from CI's
-  `setup-dotnet`. A no-longer-supported target is a note, not a failure. So 11.0 (STS, `go-live`
-  RC on 2026-11-07) becomes REQUIRED at its GA: add `net11.0` and `11.0.x` then. That needs a
-  .NET 11 SDK locally (SDK 10 cannot build `net11.0`). 8.0 and 9.0 leave after 2026-11-10 (both
-  EOL that day), but stay as notes while the package ships a `net8.0` asset. Dropping that asset
-  is an owner decision. `runtimes.ts selftest`: 16 pure checks. Inverted: on the old tree the
-  check failed naming the three gaps (net8.0 and net9.0 not targets, 9.0.x not installed).
-- **59/59 on each of net8.0, net9.0 and net10.0** (2026-11-08). The machine has only the .NET 10
-  runtime, so the 8 / 9 runs used runtimes from Microsoft's signed `dotnet-install.ps1`,
-  installed into the session scratchpad and found through `DOTNET_ROOT` (+
-  `DOTNET_MULTILEVEL_LOOKUP=0`), then deleted. **Locally without those runtimes:**
-  `dotnet10 test tests -f net10.0`. The same applies to the gate's previous-tag tests from
-  v0.2.1 on: v0.2.0's `tests/` targets net10.0 only, later tags all three.
+- **.NET 10 only from 0.2.0 (owner, 2026-11-07: "I think we need to move to dotnet 10 since the
+  EOL for 8 and 9 are this coming week").** Library `<TargetFramework>net10.0`, test project
+  `net10.0`, CI installs 10.0.x only (the packed 0.2.0 holds `lib/net10.0` only, `Wasmtime` the
+  one dependency). .NET 8 / 9 consumers stay on 0.1.1; README Breaking Changes row item (5).
+- **Every required .NET line is tested** (the owner's "like the -js version" question, same day).
+  **`bun scripts/runtimes.ts`** (Bun, workspace rule 1; modelled on -js's `check-lts.ts`) reads
+  Microsoft's `releases-index.json`. A line is SUPPORTED when its phase is `active` /
+  `maintenance` and its EOL has not passed, and REQUIRED unless it is within 30 days of its EOL
+  ("leaving", reported as a note). Each required line must be a test-project target AND installed
+  by every CI job that runs `dotnet test` (all `.github/workflows/*.yml`; the push-only `publish`
+  job is not checked). It runs in `validate` and in `publish.yml`'s `checks` job, so a release is
+  blocked while a required line is untested. So **11.0 (STS, `go-live` RC on 2026-11-07) becomes
+  REQUIRED at its GA**: add `net11.0` to the test project and `11.0.x` to both workflows then.
+  That needs a .NET 11 SDK locally (SDK 10 cannot build `net11.0`). `runtimes.ts selftest`: 24
+  pure checks. Inverted twice: on the tree before the matrix it failed naming the three gaps;
+  `checks` lacking 9.0.x while tests targeted 9 is the per-job case, now a selftest.
+- **Before the move, 59/59 also ran on net8.0 and net9.0** (2026-11-08, `4b7b773`, CI run
+  42440580340 too). The machine has only the .NET 10 runtime, so the local 8 / 9 runs used
+  runtimes from Microsoft's signed `dotnet-install.ps1` in the session scratchpad, found through
+  `DOTNET_ROOT` (+ `DOTNET_MULTILEVEL_LOOKUP=0`), then deleted. The same method works for a
+  future second line.
 - **59/59 pass (2026-11-07, SDK 10.0.403):** the 9 below plus `tests/RefusalTests.cs` (50 cases):
   SPEC 4.0.0 § 8 "Refusals" row by row, with extra cases for each rule (unreadable `.wit`, a path
   without `.wasm`, query dropped, connection refused, cancellation, the timeout's domain,
@@ -251,22 +254,31 @@ a future add (not required for SPEC §7 conformance).
   re-run `publish.yml` on `v0.1.1` (safe: `--skip-duplicate`). A second paste of the same error
   (2026-10-22) matched no new run: still run 39821337557. **Applies to every repo moved to the org
   that publishes through a trusted-publishing policy** (cf. -js, -c, -dart registries).
-- **`publish.yml` is two jobs since `338e003` (C30, owner's "yes", 2026-11-07).** `checks`
-  (`contents: read`, no `id-token`) runs every step that executes package code: tag check,
-  fixtures, tests, self-test, the release gate, restore / build / pack. It uploads
-  `out/*.nupkg` + `*.snupkg` as the `nupkg` artifact. `publish` (`id-token: write` only) checks
+- **A release is a TAG PUSH since 2026-11-07** (owner: "option 2", the loader-dart shape). The
+  flow: `bun scripts/compat.ts bump <kind>`, commit, `git tag vX.Y.Z`, push the commit and the
+  tag. Pushing the tag runs `publish.yml`, which publishes to nuget.org and then creates the
+  GitHub Release itself. Before this, the workflow ran on a published GitHub Release, so pushing
+  `v0.2.0` alone published nothing, and nobody here could create the Release (`gh` is not
+  installed).
+- **`publish.yml` jobs (C30, owner's "yes", 2026-11-07; first split `338e003`).** `checks`
+  (`contents: read`, no `id-token`): the run must be for a tag at this commit; then fixtures, the
+  .NET-line check, tests, self-test, the release gate, restore / build / pack. It uploads
+  `out/*.nupkg` + `*.snupkg` as the `nupkg` artifact. `publish` (`id-token: write` only): checks
   the tag is still at `github.sha` with `git ls-remote`, downloads the artifact, sets up the SDK,
-  then runs `NuGet/login` and `dotnet nuget push`. It has no checkout and runs no package code.
-  Every `uses:` in both workflows is pinned to a commit hash (each checked to be a commit through
-  the GitHub API). `workflow_dispatch` on a branch fails the tag check by design.
-- **0.2.0 (SPEC 4.0.0) tagged and pushed 2026-11-07** (owner: "yes release 0.2.0"): `bump minor`
-  at floor major (Rule 6), release commit `93cb185` = tag `v0.2.0` = `origin/main` (`ls-remote`),
-  local `compat.ts release` passed. The GitHub Release (= the nuget.org publish) is the owner's
-  web-UI step; [open-work.md](open-work.md).
-- **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
+  runs `NuGet/login` and `dotnet nuget push`. It has no checkout and runs no package code.
+  `release` (`contents: write` only, after a successful push): the same tag check, then
+  `gh release create <tag> out/* --generate-notes --verify-tag`. Every `uses:` in both workflows
+  is pinned to a commit hash (each checked to be a commit through the GitHub API).
+  `workflow_dispatch` on a branch fails the tag check by design. No `concurrency:` (C30 (2)).
+- **0.2.0 (SPEC 4.0.0, .NET 10 only) on 2026-11-07** (owner: "yes release 0.2.0", then
+  "option 2" and "move to dotnet 10"). The tag was first pushed at `93cb185`, under the
+  Release-triggered workflow, which started nothing. Checked before moving it: no GitHub Release,
+  no 0.2.0 on nuget.org, no `publish.yml` run since 0.1.1. The tag then moved to the commit with
+  the tag-push workflow and the .NET 10 move; the result is in [open-work.md](open-work.md).
+- **Releasing goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
-  SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate
-  on the tag (blocking) before packing. nuget.org rejects re-pushing an existing version.
+  SemVer floor), then commit, tag `v<ver>`, push both; `publish.yml` re-runs the gate on the tag
+  (blocking) before packing. nuget.org rejects re-pushing an existing version.
 - **Licensing:** package license is **MIT** (`<PackageLicenseExpression>MIT</PackageLicenseExpression>`),
   corrected from an earlier `MIT OR Apache-2.0` that had no matching Apache file; README §License synced.
 - **Repo hygiene (2026-06-24):** `CLAUDE.md`, `cmem/`, and `tests/` were made **gitignored and
