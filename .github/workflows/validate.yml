@@ -1,8 +1,9 @@
 name: Validate
 
-# Every push and pull request: the fixtures against their stamp, the test suite, the compatibility
-# gate's self-test, and a check that
-# PublicAPI.*.txt match the code (an API change must re-baseline them in its own commit).
+# Every push and pull request: the fixtures against their stamp, the supported .NET lines (every
+# LTS and STS line Microsoft supports today is a test target and installed here), the test suite
+# on each of them, the compatibility gate's self-test, and a check that PublicAPI.*.txt match the
+# code (an API change must re-baseline them in its own commit).
 on:
   push:
   pull_request:
@@ -25,6 +26,7 @@ jobs:
         with:
           dotnet-version: |
             8.0.x
+            9.0.x
             10.0.x
 
       - name: Setup Bun
@@ -35,7 +37,10 @@ jobs:
       - name: Fixtures match the stamp
         run: bun scripts/fixtures.ts
 
-      - name: Test
+      - name: Every supported .NET line is covered
+        run: bun scripts/runtimes.ts && bun scripts/runtimes.ts selftest
+
+      - name: Test (every target framework)
         run: dotnet test tests
 
       - name: Compatibility gate self-test

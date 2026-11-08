@@ -11,7 +11,10 @@ direct, strings encoded/decoded through linear memory, booleans normalized).
 - Conforms to the cross-language **SPEC.md v4.0.0** (Canonical ABI, callee-allocated string returns +
   `cabi_post_<name>`; loud failures: only an absent `.wit` means raw exports, typed calls and host
   callbacks are checked, never coerced, and each http(s) fetch has a time limit).
-- Targets **net8.0** and **net10.0**.
+- Targets **net8.0** and **net10.0**, and is tested on **every .NET line Microsoft supports**, LTS
+  and STS: today .NET 8, 9 and 10. .NET 9 uses the `net8.0` build. CI checks the list against
+  Microsoft's release index, so a new line is required from its GA and a line leaves after its
+  end of support.
 
 ## Install
 
@@ -133,6 +136,11 @@ exports; `Call` then marshals by .NET argument type (strings require a `.wit`).
 ```sh
 dotnet test tests
 ```
+
+This runs the suite once per target framework (`net8.0`, `net9.0`, `net10.0`), so each of those
+.NET runtimes must be installed; `dotnet test tests -f net10.0` runs one.
+`bun scripts/runtimes.ts` checks that every supported .NET line is a test target and installed in
+CI.
 
 The suite covers the cross-language SPEC §8 fixtures (`tests/LoaderTests.cs`): numeric round-trip,
 bool normalization, string params/returns (Canonical ABI) and host import callbacks, plus `Bind`,
