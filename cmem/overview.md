@@ -45,7 +45,10 @@ before writing the port.
 for installed programs that depend on that version (owner, 2026-11-08; the earlier note here
 said "a runtime-only install with no SDK"), and `dotnet10` is .NET 10. Where `dotnet10` comes from is a machine fact, kept out of this
 committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22: `dotnet10 --version`
-→ 10.0.402. Build, test and pack go through it; committed scripts are C# scripts run by the
+→ 10.0.402; 10.0.403 on 2026-11-07. Since 2026-11-08 there is also **`dotnet11`** (the .NET 11
+SDK, 11.0.100-rc.3 that day) for .NET 11 work. **`DOTNET_ROOT` stays the .NET 8 system install**
+(owner, 2026-11-08); neither command needs it ([working-rules.md](working-rules.md)). Build, test
+and pack go through `dotnet10`; committed scripts are C# scripts run by the
 pinned local dotnet-script (`dotnet10 tool run dotnet-script scripts/<name>.csx`, since
 2026-11-08; Bun before; [working-rules.md](working-rules.md)). Library and test
 project target **net10.0** only, from 0.2.0 (owner, 2026-11-07; 0.1.x was net8.0;net10.0). See
@@ -144,7 +147,7 @@ a future add (not required for SPEC §7 conformance).
   job is not checked). It runs in `validate` and in `publish.yml`'s `checks` job, so a release is
   blocked while a required line is untested. So **11.0 (STS, `go-live` RC on 2026-11-07) becomes
   REQUIRED at its GA**: add `net11.0` to the test project and `11.0.x` to both workflows then.
-  That needs a .NET 11 SDK locally (SDK 10 cannot build `net11.0`). `runtimes.csx -- selftest`: 24
+  SDK 10 cannot build `net11.0`; locally use `dotnet11` (installed 2026-11-08). `runtimes.csx -- selftest`: 24
   pure checks. Inverted twice: on the tree before the matrix it failed naming the three gaps;
   `checks` lacking 9.0.x while tests targeted 9 is the per-job case, now a selftest.
 - **Before the move, 59/59 also ran on net8.0 and net9.0** (2026-11-08, `4b7b773`, CI run

@@ -17,9 +17,13 @@ belong to the workspace session are listed only while not yet done there.
 
 - **.NET 11 GA (expected mid-November 2026):** `scripts/runtimes.csx` then fails in CI, and
   BLOCKS releases, until `net11.0` is a test target and `11.0.x` is installed in both workflows'
-  test jobs. That needs a .NET 11 SDK locally (`dotnet10` cannot build `net11.0`). Whether the
-  LIBRARY should gain a `net11.0` asset is a separate question; .NET 11 consumers get the
-  `net10.0` one meanwhile.
+  test jobs. `dotnet10` cannot build `net11.0`; the .NET 11 SDK is installed here as
+  **`dotnet11`** (11.0.100-rc.3 on 2026-11-08; update it to the GA SDK first). Once
+  `net11.0` is a target, the local commands that build the tests need the 11 SDK:
+  `dotnet11 build tests` / `dotnet11 test tests`, and `UWL_DOTNET=dotnet11` for `compat.csx`,
+  which otherwise picks `dotnet10`. The 11 SDK builds `net10.0` too. CI installs both SDKs,
+  and its `dotnet` then resolves to the newest. Whether the LIBRARY should gain a `net11.0`
+  asset is a separate question; .NET 11 consumers get the `net10.0` one meanwhile.
 
 - **Source-generator typed interface** (PORT_PROMPT item 4): not built; not required for SPEC
   conformance; `Bind` covers the destructure pattern. ([overview.md](overview.md) → "Public API")

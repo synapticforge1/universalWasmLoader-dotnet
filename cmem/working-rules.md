@@ -72,6 +72,17 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   programs depend on that version, and `dotnet10` is .NET 10. This repo is .NET 10 only from
   0.2.0. Never change what bare `dotnet` points at. See [overview.md](overview.md) → "Toolchain".
   `compat.csx` picks `$UWL_DOTNET`, else `dotnet10` when on PATH, else `dotnet` (CI).
+- **`dotnet11` is the .NET 11 SDK** on the development machine (added 2026-11-08 at the owner's
+  request, the same kind of command as `dotnet10`; 11.0.100-rc.3 that day). Use it only for
+  .NET 11 work (the `net11.0` test target at GA: [open-work.md](open-work.md)); the repo's
+  commands stay on `dotnet10`.
+- 🔒 **`DOTNET_ROOT` stays the .NET 8 system install** (owner, 2026-11-08: "I have to keep the
+  dotnet root as dotnet 8 for installed programs that are not yet compatible with dotnet 10").
+  Never change it, and never set it for this repo's work. `dotnet10` / `dotnet11` find their own
+  SDKs without it. With it on the .NET 8 install, this repo's build, 59/59 tests and `dotnet10
+  tool run dotnet-script` all pass (2026-11-08). Scoop's .NET SDK installs have overwritten it
+  (twice); the machine notes say how to check and restore it (the workspace's
+  `cmem/local/environment.md`).
 - **Letter H15 (workspace `handoffs.md`) — closed by the workspace 2026-10-22** on this repo's
   earlier record ("nothing to port", checked at `f81cb55` = `9bb0742` after the history rewrite;
   `git grep -i -E 'deno|\bbun\b|\bnode\b|npx'` matched nothing; the word boundaries matter: without
