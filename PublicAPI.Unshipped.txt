@@ -1,10 +1,1 @@
 #nullable enable
-*REMOVED*static UniversalWasmLoader.Loader.ImportAsync(string! source, UniversalWasmLoader.Callbacks? callbacks = null) -> System.Threading.Tasks.Task<UniversalWasmLoader.WasmModule!>!
-static readonly UniversalWasmLoader.LoadOptions.DefaultTimeout -> System.TimeSpan
-static UniversalWasmLoader.Loader.ImportAsync(string! source, UniversalWasmLoader.Callbacks? callbacks = null, UniversalWasmLoader.LoadOptions? options = null) -> System.Threading.Tasks.Task<UniversalWasmLoader.WasmModule!>!
-UniversalWasmLoader.LoadOptions
-UniversalWasmLoader.LoadOptions.CancellationToken.get -> System.Threading.CancellationToken
-UniversalWasmLoader.LoadOptions.CancellationToken.init -> void
-UniversalWasmLoader.LoadOptions.LoadOptions() -> void
-UniversalWasmLoader.LoadOptions.Timeout.get -> System.TimeSpan
-UniversalWasmLoader.LoadOptions.Timeout.init -> void

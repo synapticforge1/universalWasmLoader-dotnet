@@ -1,6 +1,5 @@
 #nullable enable
 static UniversalWasmLoader.Loader.CreateSingleton(string! path, UniversalWasmLoader.Callbacks? callbacks = null) -> System.Func<UniversalWasmLoader.WasmModule!>!
-static UniversalWasmLoader.Loader.ImportAsync(string! source, UniversalWasmLoader.Callbacks? callbacks = null) -> System.Threading.Tasks.Task<UniversalWasmLoader.WasmModule!>!
 static UniversalWasmLoader.Loader.Load(string! path, UniversalWasmLoader.Callbacks? callbacks = null) -> UniversalWasmLoader.WasmModule!
 UniversalWasmLoader.Callbacks
 UniversalWasmLoader.Callbacks.Callbacks() -> void
@@ -19,3 +18,11 @@ UniversalWasmLoader.WasmModule.Bind(string! name) -> System.Func<object?[]!, obj
 UniversalWasmLoader.WasmModule.Call(string! name, params object?[]! args) -> object?
 UniversalWasmLoader.WasmModule.Dispose() -> void
 UniversalWasmLoader.WasmModule.Exports.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+static readonly UniversalWasmLoader.LoadOptions.DefaultTimeout -> System.TimeSpan
+static UniversalWasmLoader.Loader.ImportAsync(string! source, UniversalWasmLoader.Callbacks? callbacks = null, UniversalWasmLoader.LoadOptions? options = null) -> System.Threading.Tasks.Task<UniversalWasmLoader.WasmModule!>!
+UniversalWasmLoader.LoadOptions
+UniversalWasmLoader.LoadOptions.CancellationToken.get -> System.Threading.CancellationToken
+UniversalWasmLoader.LoadOptions.CancellationToken.init -> void
+UniversalWasmLoader.LoadOptions.LoadOptions() -> void
+UniversalWasmLoader.LoadOptions.Timeout.get -> System.TimeSpan
+UniversalWasmLoader.LoadOptions.Timeout.init -> void
