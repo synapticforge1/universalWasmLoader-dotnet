@@ -36,8 +36,12 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   route, porting `fixtures.ts` first with an output diff (workspace port rule).
 - ✅ **`dotnet-script` RUNS here since 2026-11-08** (supersedes the 2026-10-22 bullet above and
   the "neither is installed" clause just above). The owner's correction: the command is
-  `dotnet10 dotnet-script <file>`; `dotnet10 script <file>` and plain `dotnet-script <file>` work
-  too (the owner confirmed `dotnet10 script`). Measured with a throwaway `.csx` (deleted):
+  `dotnet10 dotnet-script <file>`, and `dotnet10 script <file>` works too (owner confirmed).
+  **Use `dotnet10 script <file>`; never plain `dotnet-script <file>`** (owner, 2026-11-08: it
+  "is throwing errors in the terminal when used. I do not suggest using that form"). It ran in
+  this session's shell, where `DOTNET_ROOT` points at the scoop SDK. Likely cause, not
+  confirmed: the bare shim resolves .NET through `DOTNET_ROOT` or else the system
+  `C:\Program Files\dotnet`, which has no SDK, while `dotnet10 …` always uses the SDK. Measured with a throwaway `.csx` (deleted):
   `dotnet-script` 2.0.1 is a `dotnet10` global tool (shim `~\.dotnet\tools\dotnet-script.exe`,
   which my check earlier the same day found absent). It runs on the .NET 10.0.14 runtime, with
   args after `--`; 13.1 s first run (restore + compile), 0.9 s cached. It **builds no `.exe`**:
