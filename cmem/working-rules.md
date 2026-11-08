@@ -21,7 +21,9 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   `%TEMP%\dotnet-script\`, which overflowed MAX_PATH for a scratchpad script. It never reached the
   compile step, so what it writes was NOT measured (by design a cached `.dll`, no `.exe`). Owner's
   call the same day: Bun now; port later under the proof rule if C# gains a listed mechanism.
-- 🔒 **Re-asked 2026-11-08; the owner's decision: KEEP BUN** ("1"). Measured that day on SDK
+- 🔒 **Re-asked 2026-11-08; the owner's decision: KEEP BUN FOR NOW** ("1"; "the scripting is
+  still not working yet", i.e. C# scripting does not work on this machine yet, so revisit when it
+  does). Measured that day on SDK
   10.0.403 with throwaway scripts (deleted): `dotnet10 run --file x.cs` still builds `x.exe` (an
   apphost) + `x.dll` under `%TEMP%\dotnet\runfile\`, and runs AS that `.exe` (8.8 s first run,
   0.2 s cached). With `#:property UseAppHost=false` it builds no `.exe` and runs as a cached
@@ -30,7 +32,8 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   separately installed `dotnet-repl` tool. `.csx` needs `dotnet-script` or Roslyn `csi`, neither
   in the SDK. Neither is installed here: only a shim-less `dotnet-script` 2.0.1 leftover in
   `~\.dotnet\tools\.store` from the 2026-10-22 trial. An installed tool would be a CI dependency
-  like Bun, so it gains nothing. Re-open only on the owner's word.
+  like Bun, so it gains nothing. To revisit once C# scripting works here: the `UseAppHost=false`
+  route, porting `fixtures.ts` first with an output diff (workspace port rule).
 - **Scope:** the rule governs COMMITTED scripts kept for repeated use (what would otherwise be a
   `.ps1`/`.sh`/`.cmd`). Product code and the test suite are not scripts; project tasks stay plain
   `dotnet10 build` / `dotnet10 test tests` / `dotnet10 pack`. **A one-time script deleted after use
