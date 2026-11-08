@@ -2,9 +2,9 @@ name: Publish to NuGet
 
 # Publishes the package via NuGet Trusted Publishing (OIDC) — no API keys stored.
 # Triggers when a `v*` tag is pushed (owner, 2026-11-07: "option 2", the loader-dart shape), or
-# manually from the Actions tab ON A TAG. A release is therefore: `bun scripts/compat.ts bump
-# <kind>`, commit, `git tag vX.Y.Z`, push the commit and the tag. The last job creates the GitHub
-# Release; nobody drafts one by hand.
+# manually from the Actions tab ON A TAG. A release is therefore: `dotnet10 tool run dotnet-script
+# scripts/compat.csx -- bump <kind>`, commit, `git tag vX.Y.Z`, push the commit and the tag. The
+# last job creates the GitHub Release; nobody drafts one by hand.
 #
 # Two jobs, on purpose (workspace C30, owner 2026-11-07): an `id-token: write` job's every step can
 # mint the OIDC token that NuGet/login exchanges for a push key. So `checks` runs everything that
@@ -48,26 +48,26 @@ jobs:
           dotnet-version: |
             10.0.x
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: 1.4.3
+      # The repo's scripts are C# scripts run by dotnet-script, pinned in dotnet-tools.json. It
+      # restores from nuget.org here, in the job that holds no publishing credential.
+      - name: Restore the script runner
+        run: dotnet tool restore
 
       - name: Fixtures match the stamp
-        run: bun scripts/fixtures.ts
+        run: dotnet tool run dotnet-script scripts/fixtures.csx
 
       - name: Every supported .NET line is covered
-        run: bun scripts/runtimes.ts
+        run: dotnet tool run dotnet-script scripts/runtimes.csx
 
       - name: Test (every target framework)
         run: dotnet test tests
 
       - name: Compatibility gate self-test
-        run: bun scripts/compat.ts selftest
+        run: dotnet tool run dotnet-script scripts/compat.csx -- selftest
 
       # Blocking: version line = tag, PublicAPI floor vs the previous tag, previous tag's tests.
       - name: Compatibility gate (release)
-        run: bun scripts/compat.ts release
+        run: dotnet tool run dotnet-script scripts/compat.csx -- release
 
       - name: Restore
         run: dotnet restore UniversalWasmLoader.csproj

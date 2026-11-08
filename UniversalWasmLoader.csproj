@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- .NET 10 only from 0.2.0 (owner, 2026-11-07): .NET 8 and 9 reach end of support on
-         2026-11-10. `bun scripts/runtimes.ts` names the lines that must be tested. -->
+         2026-11-10. `scripts/runtimes.csx` names the lines that must be tested. -->
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>

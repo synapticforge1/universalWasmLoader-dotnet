@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Every supported .NET line, LTS and STS, that is not within 30 days of its end of support;
-         `bun scripts/runtimes.ts` checks this list against Microsoft's release index. -->
+         `scripts/runtimes.csx` checks this list against Microsoft's release index. -->
     <TargetFrameworks>net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

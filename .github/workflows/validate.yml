@@ -27,22 +27,21 @@ jobs:
           dotnet-version: |
             10.0.x
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: 1.4.3
+      # The repo's scripts are C# scripts run by dotnet-script, pinned in dotnet-tools.json.
+      - name: Restore the script runner
+        run: dotnet tool restore
 
       - name: Fixtures match the stamp
-        run: bun scripts/fixtures.ts
+        run: dotnet tool run dotnet-script scripts/fixtures.csx
 
       - name: Every supported .NET line is covered
-        run: bun scripts/runtimes.ts && bun scripts/runtimes.ts selftest
+        run: dotnet tool run dotnet-script scripts/runtimes.csx && dotnet tool run dotnet-script scripts/runtimes.csx -- selftest
 
       - name: Test (every target framework)
         run: dotnet test tests
 
       - name: Compatibility gate self-test
-        run: bun scripts/compat.ts selftest
+        run: dotnet tool run dotnet-script scripts/compat.csx -- selftest
 
       - name: PublicAPI files match the code
-        run: bun scripts/compat.ts surface --check
+        run: dotnet tool run dotnet-script scripts/compat.csx -- surface --check
