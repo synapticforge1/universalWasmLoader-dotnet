@@ -5,25 +5,16 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Waiting on the owner
 
-- **Push and release SPEC 4.0.0 as 0.2.0** (C29, 2026-11-07). `d5b50c1` (surface) + `9e131b2`
-  (behaviour) + the memory commit are on local `main` only (`origin/main` = `957b2c2`). The gate
-  report is clean: floor major, pre-1.0 Rule 6 minor, Breaking Changes row present, v0.1.1's tests
-  7/7 on the new code. Release steps: `bun scripts/compat.ts bump minor` (→ 0.2.0, stamps the
-  README row), commit, tag `v0.2.0`, push, publish the GitHub Release (that runs `publish.yml`,
-  which IS the nuget.org publish). See [overview.md](overview.md) → "Build / release flow".
-- **C30: split `publish.yml` so the OIDC credential is in a job that runs no third-party code**
-  (read 2026-11-07; reasoned, not measured). Today ONE job has `id-token: write` and also runs
-  `dotnet test`, restore, build and pack. Those execute NuGet packages' MSBuild targets
-  (`Microsoft.NET.Test.Sdk`, `Wasmtime`), the PublicAPI analyzer DLL and the previous tag's tests
-  (the gate). Every step of a job with `id-token: write` can request the token, and
-  `NuGet/login@v1` exchanges it for a 1-hour push key. The actions are pinned by tag (`@v4`, `@v2`,
-  `@v1`), not by commit hash. Proposed, after the owner says yes: a `checks` job (`contents: read`,
-  no `id-token`) that tests, runs the gate, packs and uploads `out/` as an artifact; then a
-  `publish` job (`id-token: write`) that downloads the artifact, asserts the tag is still at
-  `github.sha`, and runs only `NuGet/login` + `dotnet nuget push`, with every `uses:` pinned to a
-  hash. C30 (2) does not apply: there is no `concurrency:`, and the push is the last step. (3) does
-  not apply: no `bun fmt`. This is loader-dart's shape (`cb7bc26`), plus the artifact hand-off,
-  because this repo's push needs the built `.nupkg`.
+- **Publish the GitHub Release for `v0.2.0`** (owner: "yes release 0.2.0", 2026-11-07). Done here:
+  `bump minor` → 0.2.0 (`93cb185`), tag `v0.2.0` → `93cb185` (lightweight, like v0.1.x),
+  `compat.ts release` passed locally on the tagged HEAD, `main` + tag pushed and read back with
+  `ls-remote`. NOT done: the GitHub Release itself (`gh` is not installed here). Web UI: Releases →
+  Draft a new release → tag `v0.2.0` → Publish. That runs `publish.yml` (`checks` then `publish`),
+  which pushes 0.2.0 to nuget.org. **First run of the split workflow and of the `NuGet/login`
+  hash pin:** if the org's Actions policy lists `NuGet/login@v1` by tag, the run ends in
+  `startup_failure` with nothing published. The fix is then the POLICY (allow `NuGet/login@*`),
+  then a re-run: a re-run reads `publish.yml` at the tagged commit, so changing the pin instead
+  needs a new commit, which means moving the tag (owner's word) or releasing 0.2.1.
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
   `v0.1.0` + `v0.1.1` only (all post-purge), no LFS; old commits still served by hash (e.g.
@@ -32,7 +23,17 @@ belong to the workspace session are listed only while not yet done there.
   `cmem/local/backups/`) and gives `1588c76` / `0698e13` as the first changed commits (filter-branch
   has no filter-repo note). It names neither the personal address nor the removed paths.
 
+- **After 2026-11-10 (.NET 8 and 9 EOL): keep or drop the library's `net8.0` asset?** Dropping
+  it changes what the package offers (.NET 8 / 9 consumers could no longer install new versions),
+  and the PublicAPI gate does not see target frameworks, so it would need its own Breaking Changes
+  row. Until then `runtimes.ts` lists net8.0 / net9.0 as notes and CI keeps testing them.
+
 ## Backlog
+
+- **.NET 11 GA (expected mid-November 2026):** `bun scripts/runtimes.ts` then fails in CI until
+  `net11.0` is a test target and `11.0.x` is in `validate.yml`. That needs a .NET 11 SDK locally
+  (`dotnet10` cannot build `net11.0`). Whether the LIBRARY should gain a `net11.0` asset is a
+  separate question; consumers get the `net10.0` one meanwhile.
 
 - **Source-generator typed interface** (PORT_PROMPT item 4): not built; not required for SPEC
   conformance; `Bind` covers the destructure pattern. ([overview.md](overview.md) → "Public API")

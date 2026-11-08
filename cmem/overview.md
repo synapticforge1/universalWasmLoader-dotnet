@@ -11,8 +11,8 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 - **Language / runtime:** C# on .NET, built on **Wasmtime** (NuGet `Wasmtime`, the Bytecode Alliance
   wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
 - **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published: 0.1.0
-  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0.** SPEC 4.0.0 is on local `main`, unreleased
-  (see "Current state").
+  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0.** 0.2.0 (SPEC 4.0.0) is tagged and pushed;
+  its nuget.org publish waits on the GitHub Release (see "Current state").
 
 ## Repository home — `synapticforge1` organization (recorded 2026-10-20)
 
@@ -46,14 +46,15 @@ runtime-only install with no SDK. Where `dotnet10` comes from is a machine fact,
 committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22: `dotnet10 --version`
 → 10.0.402. Build, test and pack go through it; committed scripts are Bun (`bun scripts/<name>.ts`,
 [working-rules.md](working-rules.md)). The test project
-targets **net10.0**; the library multi-targets **net8.0;net10.0** for consumers.
+targets **net8.0;net9.0;net10.0** (every supported line since 2026-11-07, see "Tests"); the
+library multi-targets **net8.0;net10.0** for consumers.
 
-## Current state — SPEC 4.0.0 on `main`, unreleased (2026-11-07); 0.1.1 (SPEC 3.0.0) on nuget.org
+## Current state — 0.2.0 (SPEC 4.0.0) tagged and pushed 2026-11-07; nuget.org publish pending
 
 Re-aligned to SPEC 4.0.0 on 2026-11-07 (workspace row C29): `d5b50c1` (surface re-baseline alone)
-and `9e131b2` (behaviour + tests). Local `main` only, not pushed, not released. Version decision:
-**0.2.0** (gate floor major; pre-1.0 Rule 6 minor; README Breaking Changes row). `<Version>` stays
-0.1.1 until the owner releases. Source (namespace `UniversalWasmLoader`):
+and `9e131b2` (behaviour + tests). **0.2.0** (gate floor major; pre-1.0 Rule 6 minor; README
+Breaking Changes row): release commit `93cb185` = tag `v0.2.0`, pushed. nuget.org still serves
+0.1.1 until the GitHub Release is published ("Build / release flow"). Source (namespace `UniversalWasmLoader`):
 
 - `Wit.cs` — the strict WIT parser: a port of loader-js 2.0.0's `wit-parser.js`, with the same
   grammar (SPEC §2 "Parsing") and the same messages, as `FormatException`. An unknown type is an
@@ -128,6 +129,25 @@ a future add (not required for SPEC §7 conformance).
 
 ## Tests
 
+- **Every supported .NET line, LTS and STS (owner, 2026-11-07: "yes", asked "like the -js
+  version").** The test project targets `net8.0;net9.0;net10.0`. `net9.0` resolves the library's
+  `net8.0` asset, as a .NET 9 consumer would; checked by hash, and net10.0 gets the `net10.0`
+  asset. `validate.yml` installs SDKs 8.0.x / 9.0.x / 10.0.x and runs `dotnet test tests` (each
+  target). **`bun scripts/runtimes.ts`** (Bun, workspace rule 1; modelled on -js's
+  `check-lts.ts`) reads Microsoft's `releases-index.json` and fails when a supported line (phase
+  `active` / `maintenance`, EOL not passed) is missing from the test targets or from CI's
+  `setup-dotnet`. A no-longer-supported target is a note, not a failure. So 11.0 (STS, `go-live`
+  RC on 2026-11-07) becomes REQUIRED at its GA: add `net11.0` and `11.0.x` then. That needs a
+  .NET 11 SDK locally (SDK 10 cannot build `net11.0`). 8.0 and 9.0 leave after 2026-11-10 (both
+  EOL that day), but stay as notes while the package ships a `net8.0` asset. Dropping that asset
+  is an owner decision. `runtimes.ts selftest`: 16 pure checks. Inverted: on the old tree the
+  check failed naming the three gaps (net8.0 and net9.0 not targets, 9.0.x not installed).
+- **59/59 on each of net8.0, net9.0 and net10.0** (2026-11-08). The machine has only the .NET 10
+  runtime, so the 8 / 9 runs used runtimes from Microsoft's signed `dotnet-install.ps1`,
+  installed into the session scratchpad and found through `DOTNET_ROOT` (+
+  `DOTNET_MULTILEVEL_LOOKUP=0`), then deleted. **Locally without those runtimes:**
+  `dotnet10 test tests -f net10.0`. The same applies to the gate's previous-tag tests from
+  v0.2.1 on: v0.2.0's `tests/` targets net10.0 only, later tags all three.
 - **59/59 pass (2026-11-07, SDK 10.0.403):** the 9 below plus `tests/RefusalTests.cs` (50 cases):
   SPEC 4.0.0 § 8 "Refusals" row by row, with extra cases for each rule (unreadable `.wit`, a path
   without `.wasm`, query dropped, connection refused, cancellation, the timeout's domain,
@@ -231,6 +251,18 @@ a future add (not required for SPEC §7 conformance).
   re-run `publish.yml` on `v0.1.1` (safe: `--skip-duplicate`). A second paste of the same error
   (2026-10-22) matched no new run: still run 39821337557. **Applies to every repo moved to the org
   that publishes through a trusted-publishing policy** (cf. -js, -c, -dart registries).
+- **`publish.yml` is two jobs since `338e003` (C30, owner's "yes", 2026-11-07).** `checks`
+  (`contents: read`, no `id-token`) runs every step that executes package code: tag check,
+  fixtures, tests, self-test, the release gate, restore / build / pack. It uploads
+  `out/*.nupkg` + `*.snupkg` as the `nupkg` artifact. `publish` (`id-token: write` only) checks
+  the tag is still at `github.sha` with `git ls-remote`, downloads the artifact, sets up the SDK,
+  then runs `NuGet/login` and `dotnet nuget push`. It has no checkout and runs no package code.
+  Every `uses:` in both workflows is pinned to a commit hash (each checked to be a commit through
+  the GitHub API). `workflow_dispatch` on a branch fails the tag check by design.
+- **0.2.0 (SPEC 4.0.0) tagged and pushed 2026-11-07** (owner: "yes release 0.2.0"): `bump minor`
+  at floor major (Rule 6), release commit `93cb185` = tag `v0.2.0` = `origin/main` (`ls-remote`),
+  local `compat.ts release` passed. The GitHub Release (= the nuget.org publish) is the owner's
+  web-UI step; [open-work.md](open-work.md).
 - **Releasing now goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, publish a GitHub Release; `publish.yml` re-runs the gate
