@@ -4,6 +4,12 @@
     <!-- Every supported .NET line, LTS and STS, that is not within 30 days of its end of support;
          `scripts/runtimes.csx` checks this list against Microsoft's release index. -->
     <TargetFrameworks>net10.0</TargetFrameworks>
+    <!-- .NET 11 ahead of its GA (owner, 2026-11-08: "setup the .NET 11 tests using the RC3
+         installed"): added only when the build runs on SDK 11 or later (`dotnet11`, CI
+         `validate`), so `dotnet10` and the release job (SDK 10) still build and pack as before.
+         At 11's GA it becomes unconditional (cmem/open-work.md). -->
+    <_UwlSdkMajor>$(NETCoreSdkVersion.Substring(0, $(NETCoreSdkVersion.IndexOf('.'))))</_UwlSdkMajor>
+    <TargetFrameworks Condition="$(_UwlSdkMajor) &gt;= 11">net10.0;net11.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>

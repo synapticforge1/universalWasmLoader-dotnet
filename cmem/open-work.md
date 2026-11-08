@@ -36,6 +36,20 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Backlog
 
+- **Set up AHEAD of GA (2026-11-08, owner: "setup the .NET 11 tests using the RC3 installed"):**
+  the test project adds `net11.0` only when built with SDK 11+. `_UwlSdkMajor` is derived from
+  `NETCoreSdkVersion`; `dotnet10` → `net10.0`, `dotnet11` → `net10.0;net11.0`, checked with
+  `msbuild -getProperty`. `validate.yml` has a separate job, `tests-net11-preview` (SDK 10 + SDK
+  11 `dotnet-quality: preview`), that runs `dotnet test tests` on both. The main job and
+  `publish.yml` stay on SDK 10, so the release never builds or packs with a preview SDK.
+  Measured locally: `dotnet11 test tests -f net11.0` 59/59 on 11.0 rc.3; `dotnet10 test tests`
+  59/59; `dotnet10` Release build 0 warnings. Locally, run each line with its own command:
+  `dotnet11 test tests` cannot run `net10.0` (the preview install has only the 11 runtime, and
+  the test host uses the SDK's own install), which is correct separation, not a fault.
+  `runtimes.csx` now reads every `<TargetFrameworks>` element (conditional ones too) and
+  reports a go-live / preview target as "ahead of its GA" (selftest 24 → 27). **At GA:** make
+  `net11.0` unconditional, put `11.0.x` (GA quality) into the main job and `publish.yml`'s
+  `checks`, drop the preview job, then build tests with `dotnet11`.
 - **.NET 11 GA (expected mid-November 2026):** `scripts/runtimes.csx` then fails in CI, and
   BLOCKS releases, until `net11.0` is a test target and `11.0.x` is installed in both workflows'
   test jobs. `dotnet10` cannot build `net11.0`; the .NET 11 SDK is installed here as

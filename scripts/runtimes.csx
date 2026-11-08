@@ -16,6 +16,9 @@
 // `actions/setup-dotnet` `dotnet-version`, as `<major>.0.x`); a job that never runs the tests
 // (e.g. the push-only `publish` job) is not checked. A missing line fails, naming the file and job.
 // A target that is no longer supported is reported, not failed: the package may still ship it.
+// So is a target AHEAD of its GA (a go-live / preview line, e.g. net11.0 on the 11 RC; the test
+// project adds it only when built with SDK 11+). Every `<TargetFramework(s)>` element counts,
+// conditional ones included.
 //
 //   dotnet10 tool run dotnet-script scripts/runtimes.csx              the check (fetches the index)
 //   dotnet10 tool run dotnet-script scripts/runtimes.csx -- selftest  pure-function checks, no network
@@ -71,17 +74,28 @@ static int MajorOf(string version)
     return int.Parse(m.Groups[1].Value);
 }
 
-/// The `net<N>.0` majors in a csproj's `<TargetFramework(s)>`.
+/// The channels not yet released (phase go-live / preview): a target for one is "ahead of GA".
+static List<int> UpcomingLines(IEnumerable<Channel> channels) =>
+    channels.Where(c => c.SupportPhase == "go-live" || c.SupportPhase == "preview")
+        .Select(c => MajorOf(c.ChannelVersion)).OrderBy(m => m).ToList();
+
+/// The `net<N>.0` majors in a csproj's `<TargetFramework(s)>` elements: ALL of them, conditional
+/// ones included (the test project adds net11.0 only on SDK 11+, ahead of 11's GA), in order,
+/// each major once.
 static List<int> TestTargets(string csproj)
 {
-    var m = Regex.Match(csproj, @"<TargetFrameworks?>([^<]*)</TargetFrameworks?>");
-    if (!m.Success) throw new Exception($"{TEST_PROJECT} has no <TargetFramework(s)>");
-    return m.Groups[1].Value.Split(';').Select(t => t.Trim()).Where(t => t != "").Select(t =>
-    {
-        var n = Regex.Match(t, @"^net([0-9]+)\.0$");
-        if (!n.Success) throw new Exception($"{TEST_PROJECT}: unexpected target \"{t}\"");
-        return int.Parse(n.Groups[1].Value);
-    }).ToList();
+    var matches = Regex.Matches(csproj, @"<TargetFrameworks?(?:\s[^>]*)?>([^<]*)</TargetFrameworks?>");
+    if (matches.Count == 0) throw new Exception($"{TEST_PROJECT} has no <TargetFramework(s)>");
+    var majors = new List<int>();
+    foreach (Match m in matches)
+        foreach (var t in m.Groups[1].Value.Split(';').Select(t => t.Trim()).Where(t => t != ""))
+        {
+            var n = Regex.Match(t, @"^net([0-9]+)\.0$");
+            if (!n.Success) throw new Exception($"{TEST_PROJECT}: unexpected target \"{t}\"");
+            var major = int.Parse(n.Groups[1].Value);
+            if (!majors.Contains(major)) majors.Add(major);
+        }
+    return majors;
 }
 
 /// One CI job that runs `dotnet test`, with the `<N>.0.x` majors its `setup-dotnet` installs.
@@ -122,7 +136,7 @@ static List<TestJob> TestJobs(string workflowYaml, string file)
 }
 
 /// The problems (empty = pass) and the notes for one set of inputs.
-static (List<string> Problems, List<string> Notes) Verdict(List<Line> supported, List<int> targets, List<TestJob> jobs, string today = "1970-01-01")
+static (List<string> Problems, List<string> Notes) Verdict(List<Line> supported, List<int> targets, List<TestJob> jobs, string today = "1970-01-01", List<int>? upcoming = null)
 {
     var problems = new List<string>();
     var notes = new List<string>();
@@ -139,7 +153,10 @@ static (List<string> Problems, List<string> Notes) Verdict(List<Line> supported,
             if (!job.Sdks.Contains(s.Major)) problems.Add($".NET {s.Major}.0 is supported but {job.Where} does not install it: add {s.Major}.0.x there");
     }
     foreach (var t in targets)
-        if (!supported.Any(s => s.Major == t)) notes.Add($"net{t}.0 is still a test target but no longer supported (kept while the package ships that asset?)");
+        if (!supported.Any(s => s.Major == t))
+            notes.Add(upcoming is not null && upcoming.Contains(t)
+                ? $"net{t}.0 is a test target ahead of its GA ({t}.0 is not released yet): not required"
+                : $"net{t}.0 is still a test target but no longer supported (kept while the package ships that asset?)");
     return (problems, notes);
 }
 
@@ -165,7 +182,7 @@ static async Task<int> Check()
     Console.WriteLine($"supported on {today}: {string.Join(", ", supported.Select(s => $"{s.Major}.0 {s.Type.ToUpperInvariant()} (EOL {s.Eol})"))}");
     Console.WriteLine($"test targets: {string.Join(", ", targets.Select(t => $"net{t}.0"))}");
     foreach (var j in jobs) Console.WriteLine($"{j.Where} (runs dotnet test): SDKs {string.Join(", ", j.Sdks.Select(s => $"{s}.0.x"))}");
-    var (problems, notes) = Verdict(supported, targets, jobs, today);
+    var (problems, notes) = Verdict(supported, targets, jobs, today, UpcomingLines(channels));
     foreach (var n in notes) Console.WriteLine($"note: {n}");
     foreach (var p in problems) Console.Error.WriteLine($"FAIL: {p}");
     if (problems.Count == 0) Console.WriteLine("every supported .NET line is a test target and installed in CI");
@@ -236,6 +253,13 @@ static int Selftest()
     Ok("the 30-day boundary is leaving", IsLeaving("2026-12-07", "2026-11-07") && !IsLeaving("2026-12-08", "2026-11-07"));
     Ok("no EOL date is never leaving", !IsLeaving("none", "2099-01-01"));
     Ok("all leaving fails", Verdict(new() { new(9, "", "2026-11-10") }, new() { 9 }, new() { Job("a", 9) }, "2026-11-07").Problems.Count == 1);
+
+    // Ahead of a GA: a conditional target element counts, and the target is a note, not a failure.
+    Ok("conditional targets read too", string.Join(",", TestTargets(
+        "<TargetFrameworks>net10.0</TargetFrameworks>\n<TargetFrameworks Condition=\"$(X) &gt;= 11\">net10.0;net11.0</TargetFrameworks>")) == "10,11");
+    Ok("upcoming lines are go-live / preview", string.Join(",", UpcomingLines(index)) == "11");
+    var ahead = Verdict(new() { new(10, "", "2028-11-14") }, new() { 10, 11 }, new() { Job("a", 10, 11) }, "2026-11-08", new() { 11 });
+    Ok("a target ahead of its GA is a note, not a failure", ahead.Problems.Count == 0 && ahead.Notes.Count(n => n.Contains("ahead of its GA")) == 1);
 
     Console.WriteLine($"selftest: {passed}/{passed + failed} passed");
     return failed == 0 ? 0 : 1;

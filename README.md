@@ -136,7 +136,10 @@ exports; `Call` then marshals by .NET argument type (strings require a `.wit`).
 dotnet test tests
 ```
 
-This runs the suite once per target framework of the test project (today `net10.0`).
+This runs the suite once per target framework of the test project (today `net10.0`). Built with
+a .NET 11 SDK (the release candidate until .NET 11 ships), the test project also targets
+`net11.0`, so `dotnet test tests -f net11.0` runs the suite on .NET 11. CI does that in its own
+job.
 `dotnet tool run dotnet-script scripts/runtimes.csx` checks that every required .NET line is a
 test target and is installed by each CI job that runs the tests. The repo's scripts are C# scripts
 (`scripts/*.csx`) run by [dotnet-script](https://github.com/dotnet-script/dotnet-script), pinned

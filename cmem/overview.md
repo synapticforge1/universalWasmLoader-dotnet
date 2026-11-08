@@ -147,7 +147,10 @@ a future add (not required for SPEC §7 conformance).
   job is not checked). It runs in `validate` and in `publish.yml`'s `checks` job, so a release is
   blocked while a required line is untested. So **11.0 (STS, `go-live` RC on 2026-11-07) becomes
   REQUIRED at its GA**: add `net11.0` to the test project and `11.0.x` to both workflows then.
-  SDK 10 cannot build `net11.0`; locally use `dotnet11` (installed 2026-11-08). `runtimes.csx -- selftest`: 24
+  SDK 10 cannot build `net11.0`; locally use `dotnet11` (installed 2026-11-08). **Already tested
+  on the RC since 2026-11-08:** `net11.0` is added when the build runs on SDK 11+, and CI's
+  `tests-net11-preview` job runs it; 59/59 on 11.0 rc.3 ([open-work.md](open-work.md) has the
+  details and the GA steps). `runtimes.csx -- selftest`: 24
   pure checks. Inverted twice: on the tree before the matrix it failed naming the three gaps;
   `checks` lacking 9.0.x while tests targeted 9 is the per-job case, now a selftest.
 - **Before the move, 59/59 also ran on net8.0 and net9.0** (2026-11-08, `4b7b773`, CI run

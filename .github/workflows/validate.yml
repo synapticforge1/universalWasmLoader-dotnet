@@ -45,3 +45,32 @@ jobs:
 
       - name: PublicAPI files match the code
         run: dotnet tool run dotnet-script scripts/compat.csx -- surface --check
+
+  # .NET 11 ahead of its GA (owner, 2026-11-08: "setup the .NET 11 tests using the RC3
+  # installed"). Its own job, so nothing else ever runs on a preview SDK. With SDK 11 present the
+  # test project adds net11.0, and `dotnet test` runs net10.0 AND net11.0. At 11's GA the
+  # net11.0 target becomes unconditional and 11.0.x joins the main job and publish.yml.
+  tests-net11-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup .NET 11 (release candidate)
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - name: Test (net10.0 and net11.0)
+        run: dotnet --version && dotnet test tests
