@@ -8,8 +8,9 @@ direct, strings encoded/decoded through linear memory, booleans normalized).
 - Built on **[Wasmtime](https://github.com/bytecodealliance/wasmtime-dotnet)** (the Bytecode Alliance
   engine), with **WASI Preview 1 built in** (SPEC §10) — I/O-using libraries instantiate with zero
   config; pure-compute modules need nothing.
-- Conforms to the cross-language **SPEC.md v3.0.0** (Canonical ABI, callee-allocated string returns +
-  `cabi_post_<name>`).
+- Conforms to the cross-language **SPEC.md v4.0.0** (Canonical ABI, callee-allocated string returns +
+  `cabi_post_<name>`; loud failures: only an absent `.wit` means raw exports, typed calls and host
+  callbacks are checked, never coerced, and each http(s) fetch has a time limit).
 - Targets **net8.0** and **net10.0**.
 
 ## Install

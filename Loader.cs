@@ -24,8 +24,9 @@ public static class Loader
     }
 
     /// <summary>Load a <c>.wasm</c> library from a file path or an <c>http(s)</c> URL.</summary>
-    public static async Task<WasmModule> ImportAsync(string source, Callbacks? callbacks = null)
+    public static async Task<WasmModule> ImportAsync(string source, Callbacks? callbacks = null, LoadOptions? options = null)
     {
+        _ = options;
         var (clean, requested) = ParseVersionSuffix(source);
         byte[] wasmBytes;
         string witSrc;
