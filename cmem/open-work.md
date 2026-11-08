@@ -83,16 +83,17 @@ the same day: user `MSBuildSDKsPath` removed, so the versions stay separated by 
 - **H19's template cites `cmem/overview.md:150-164`**, a stale line range: the two purge records
   are further down now. Better cited by heading ("History rewritten to remove personal
   information" / "Second purge, same day"), which does not drift.
-- **Ledger answers to verify and close** (`../../cmem/workspace-correspondence.md`, re-read
-  2026-11-08). Each holds this repo's answer; only the row's creator closes it:
-  - **C29** (loader-js closes): SPEC 4.0.0 done, 0.2.0 published.
-  - **C30** (S3D closes): read; the two-job `publish.yml` + hash pins done.
-  - **H29** (workspace closes): -dotnet's halves answered.
-  - **C32** (this repo's notes, for the workspace and loader-js): SPEC 4.0.0, the release by tag
-    push, .NET 10 only, the coverage check, `dotnet10`'s reason, and the move to dotnet-script.
-    It also suggests the Tooling table's C# row "C# → `.csx` via a pinned local dotnet-script".
-  - Older rows already answered here (`3e58efc`, 2026-10-26) and still open on the creator's
-    side: H6, H15, H22, H25, H27, H28, C8.
+- **Ledger** (`../../cmem/workspace-correspondence.md`). **2026-11-08, owner: "close the items
+  noted"** (the evidence re-derived first: nuget.org 0.2.0 = tag `v0.2.0` = `25a3d10`; the cited
+  commits on `origin/main`; publish run 42441589123 green; `publish.yml` permissions; no
+  tag-pinned `uses:`):
+  - **C32** (this repo created it): **CLOSED**.
+  - **C29, C30, H29: this repo's part CLOSED in the cell; the rows stay open.** Each also covers
+    repos that have not answered (C29: -go, -jvm, -py, -rs, -v, -zig), and the 🔒 ledger rule
+    keeps a multi-recipient row open while any recipient is. Their creators (loader-js, S3D,
+    the workspace) close them.
+  - Older rows answered here (`3e58efc`, 2026-10-26) and still open on the creator's side: H6,
+    H15, H22, H25, H27, H28, C8 (not part of the "noted" items; untouched).
   - C16 was closed by this repo (its creator) on 2026-11-07.
   - Not for this repo: H19 (excludes -dotnet), C19 (no LeptonPad ids quoted here), C33 (Bun in
     WSL; this repo uses neither).
