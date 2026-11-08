@@ -10,8 +10,9 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 
 - **Language / runtime:** C# on .NET, built on **Wasmtime** (NuGet `Wasmtime`, the Bytecode Alliance
   wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
-- **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published — v0.1.0 is live
-  on nuget.org (2026-06-24).**
+- **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published: 0.1.0
+  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0.** SPEC 4.0.0 is on local `main`, unreleased
+  (see "Current state").
 
 ## Repository home — `synapticforge1` organization (recorded 2026-10-20)
 
@@ -47,28 +48,48 @@ committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22:
 [working-rules.md](working-rules.md)). The test project
 targets **net10.0**; the library multi-targets **net8.0;net10.0** for consumers.
 
-## Current state — IMPLEMENTED + SPEC-3.0.0 conformant (2026-06-17)
+## Current state — SPEC 4.0.0 on `main`, unreleased (2026-11-07); 0.1.1 (SPEC 3.0.0) on nuget.org
 
-Fully implemented and passing the reference suite (was a pre-implementation stub). Source (namespace
-`UniversalWasmLoader`):
+Re-aligned to SPEC 4.0.0 on 2026-11-07 (workspace row C29): `d5b50c1` (surface re-baseline alone)
+and `9e131b2` (behaviour + tests). Local `main` only, not pushed, not released. Version decision:
+**0.2.0** (gate floor major; pre-1.0 Rule 6 minor; README Breaking Changes row). `<Version>` stays
+0.1.1 until the owner releases. Source (namespace `UniversalWasmLoader`):
 
-- `Wit.cs` — WIT parser (mirrors the JS `wit-parser.js`; `GeneratedRegex`, kebab→camel, s32 fallback).
-- `WasmModule.cs` — the `WasmModule` handle: `Call` / `Bind`, Canonical-ABI param encode (incl. string
-  via `cabi_realloc`) + result decode (incl. **callee-allocated string returns** — read the `[ptr,len]`
-  pair, decode, then call `cabi_post_<camel>`), `Dispose`. Args marshalled to `Wasmtime.ValueBox`.
-- `Loader.cs` — `Load` (sync, file) / `ImportAsync` (file or `http(s)` URL) / `CreateSingleton`; core
-  instantiation; **dynamic `env` host-import functions** (`Function.FromCallback(store, untyped, paramKinds,
-  resultKinds)` → decode `ValueBox` per WIT, `DynamicInvoke` the user delegate, encode result);
-  `@N` version pin; WASI-P1 (`linker.DefineWasi()` + inherited stdio) + `_initialize` (SPEC §10).
+- `Wit.cs` — the strict WIT parser: a port of loader-js 2.0.0's `wit-parser.js`, with the same
+  grammar (SPEC §2 "Parsing") and the same messages, as `FormatException`. An unknown type is an
+  error, never `s32`.
+- `WasmModule.cs` — the `WasmModule` handle: `Call` / `Bind`. Arguments are checked against the
+  WIT signature: count, and the exact .NET type per parameter, with no `Convert.*` (SPEC §4). Then
+  Canonical-ABI param encode (string via `cabi_realloc`) and result decode by pattern, including
+  **callee-allocated string returns**: read the `[ptr,len]` pair, decode, call `cabi_post_<camel>`.
+  WIT exports are resolved to `Function`s at load. `Dispose`.
+- `Loader.cs` — `Load` (sync, file) / `ImportAsync` (file or `http(s)` URL, `LoadOptions`) /
+  `CreateSingleton`. The **load plan** comes before the `.wasm` is read: the `.wit` is read or
+  fetched (only an ABSENT `.wit` is raw), parsed, then string-result imports and missing callbacks
+  are refused and each callback delegate's signature is checked against its import. Next comes
+  instantiation with the **dynamic `env` host imports** (`Function.FromCallback`: decode `ValueBox`
+  per WIT, `DynamicInvoke`, check the returned value's exact type, encode). Every WIT export must
+  exist. Also the `@N` version pin and WASI-P1 + `_initialize` (SPEC §10). http(s): one
+  `HttpClient` with no timeout of its own, a linked CTS per fetch (`LoadOptions.Timeout`, request
+  to last byte), and the error mapping in "SPEC conformance" below.
+- `LoadOptions.cs` — `Timeout` (default 30 s; `Timeout.InfiniteTimeSpan` = none; zero, negative or
+  over `int.MaxValue` ms refused in `init`) and `CancellationToken`.
+- `HostFault` (in `Loader.cs`) carries a host callback's exception across the Wasmtime trap it
+  causes, so `Call` rethrows the ORIGINAL exception (with `ExceptionDispatchInfo`). One per store.
 - `Callbacks.cs` — `new Callbacks().On(camelName, Delegate)`.
 - `InstancePool.cs` — `BlockingCollection`-backed pool of N independent instances (`Acquire`/`Release`/
   `Run`/`Size`/`Available`/`Dispose`).
 
 ### Public API
 
-`Loader.Load(path, cbs?)` · `Loader.ImportAsync(src, cbs?)` · `Loader.CreateSingleton(path, cbs?)` ·
-`WasmModule.Call(name, params object?[])` → `object?` · `WasmModule.Bind(name)` · `WasmModule.Exports`
-· `WasmModule.Dispose()` · `new InstancePool(path, size, cbs?)` · `new Callbacks().On(name, Delegate)`.
+`Loader.Load(path, cbs?)` · `Loader.ImportAsync(src, cbs?, options?)` ·
+`Loader.CreateSingleton(path, cbs?)` · `new LoadOptions { Timeout, CancellationToken }` ·
+`LoadOptions.DefaultTimeout` · `WasmModule.Call(name, params object?[])` → `object?` ·
+`WasmModule.Bind(name)` · `WasmModule.Exports` · `WasmModule.Dispose()` ·
+`new InstancePool(path, size, cbs?)` · `new Callbacks().On(name, Delegate)` (27 PublicAPI symbols,
+2026-11-07). `Load`, `CreateSingleton` and `InstancePool` are file-only and take no options. SPEC
+§11.4 asks them to accept the same options, but the limit applies only to http(s) fetches, so for
+them it is n/a, the same reasoning as loader-c's "(5) n/a".
 Exports are looked up by **camelCase** name (SPEC name-form rule). The source-generator typed
 interface (PORT_PROMPT item 4) is NOT implemented — `Bind` covers the destructure pattern; codegen is
 a future add (not required for SPEC §7 conformance).
@@ -80,9 +101,43 @@ a future add (not required for SPEC §7 conformance).
   handling is profile-independent; strings use `cabi_realloc`/`cabi_post`).
 - Wasmtime's `Function.Invoke` returns a boxed `int` for i32 results, so bool decode is `(int) != 0`
   (no high-bit-garbage issue — that bit Go/wazero needed `uint32` masking for does not arise here).
+- **SPEC 4.0.0 (2026-11-07, C29): what each refusal throws.** `.wit` unreadable (anything except
+  not-found) → `IOException`; HTTP status (other than 2xx, or 404 / 410 on the `.wit`) →
+  `HttpRequestException` `wasmImport: HTTP <n> for <url>` with `StatusCode`; network error →
+  `HttpRequestException` naming the URL; time limit → `TimeoutException` naming the URL and
+  `<n> ms`; cancellation → `OperationCanceledException` carrying the caller's token. A `.wit` that
+  does not parse → `FormatException` `invalid .wit '<path>': <fault>`; a WIT export the module
+  lacks → `InvalidOperationException`. Missing callbacks (all named), or a delegate whose
+  parameters, result or `Task`/`ValueTask` do not fit → `ArgumentException` (param `callbacks`); a
+  `string`-result import → `NotSupportedException`; these come before the `.wasm` is read. A
+  callback's wrong value → `InvalidOperationException` from `Call`. A typed-call argument →
+  `ArgumentException` naming export and parameter.
+- **The .NET reading of "never coerced":** an argument or callback value must be EXACTLY the
+  mapped type (`int` / `long` / `float` / `double` / `bool` / `string`); `3` is not accepted for
+  `f64`, nor an `int` for `s64`. A callback delegate is checked by its static signature at load.
+  Only a parameter or result declared `object` is checked by value at call time.
+- **No kind-specific result accessors** (`Call` returns `object?`), so C29 (4)'s result-kind half
+  does not apply. The result is decoded by pattern; a WASM result of the wrong kind is an error,
+  not a conversion.
+- **Checked from loader-dart's two defects (C31):** (a) a `.wasm?query` URL: the 3.0.0 code
+  appended `.wit` to the whole URL, so it fetched `mod.wasm?v=1.wit`, which is the `.wasm`
+  itself. The loose parser then gave an empty world, a typed module with no exports. Fixed (the
+  `.wit` URL comes from `GetLeftPart(UriPartial.Path)`) and tested (`Http_QueryIsNotCarriedToTheWit`,
+  red on the old code). (b) `s64` on the web: n/a, since Wasmtime is native and `long` crosses as
+  i64.
 
 ## Tests
 
+- **59/59 pass (2026-11-07, SDK 10.0.403):** the 9 below plus `tests/RefusalTests.cs` (50 cases):
+  SPEC 4.0.0 § 8 "Refusals" row by row, with extra cases for each rule (unreadable `.wit`, a path
+  without `.wasm`, query dropped, connection refused, cancellation, the timeout's domain,
+  delegate-signature refusals, a callback's own exception). The http rows use
+  `tests/TestHttpServer.cs`, a `TcpListener` on 127.0.0.1 that can stall and counts requests per
+  path, so "one request per file" and "the `.wasm` is never fetched" are asserted from its counts.
+  **Inverted:** the same suite against the 3.0.0 behaviour (`d5b50c1`) gave 16 passed / 43 failed,
+  exactly the new negatives. Its two stall tests waited **100 s each**, HttpClient's own default,
+  the only limit the old code had. **`dotnet10 test` refuses `--no-incremental`** (MSB1001); build
+  first (`dotnet10 build tests --no-incremental`), then `dotnet10 test tests --no-build`.
 - **Command:** `dotnet10 test tests` — **9/9 pass** (2026-10-22, SDK 10.0.402) (`tests/LoaderTests.cs`,
   xunit). Covers SPEC §8 (`math_50`/`booleans_50`/`strings_50`/`imports_50`, copied into `tests/` and
   copied to output) + `Bind`, singleton identity, and a concurrent `InstancePool` (size 2, `Parallel.For`

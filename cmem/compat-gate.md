@@ -20,7 +20,9 @@ loader-dart's and loader-c's gates (`../universalWasmLoader-{dart,c}/cmem/compat
 included, e.g. `static UniversalWasmLoader.Loader.Load(string! path, UniversalWasmLoader.Callbacks?
 callbacks = null) -> UniversalWasmLoader.WasmModule!`), as Shipped ∪ Unshipped minus Unshipped's
 `*REMOVED*` lines, plus the README's `**SPEC.md vX.Y.Z**` (exactly once). **20 symbols, SPEC 3.0.0,
-on 2026-10-22.** Both target frameworks (net8.0, net10.0) are checked against the same files by the
+on 2026-10-22; 27 symbols, SPEC 4.0.0, on 2026-11-07** (`d5b50c1`: `LoadOptions` + its 6 members,
+`ImportAsync` gained `options`, the old signature `*REMOVED*`). The report on 2026-11-07 gave floor
+major, v0.1.1's tests 7/7 green on the new code, and no problems once the README row existed. Both target frameworks (net8.0, net10.0) are checked against the same files by the
 build. The analyzer is `PrivateAssets="all"`: `dotnet pack` was checked to list only `Wasmtime` as a
 dependency.
 
