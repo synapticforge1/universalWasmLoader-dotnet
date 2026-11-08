@@ -41,7 +41,8 @@ var greeting = m.Call("greet", "World"); // "Hello, World!"
 ### Host import callbacks
 
 Register host functions the module calls into, keyed by the **camelCase** WIT import name. Each is a
-typed delegate; the loader marshals values:
+typed delegate whose parameters and result are the .NET types of the import's WIT signature (see
+[Type mapping](#type-mapping); `object` is also accepted and then checked when called):
 
 ```csharp
 var cbs = new Callbacks()
@@ -51,6 +52,13 @@ var cbs = new Callbacks()
 using var m = Loader.Load("imports.wasm", cbs);
 var v = m.Call("scale", 3.0, 4.0);  // 12.0
 ```
+
+Every WIT `import` needs a callback: a missing one fails the load, naming all of them
+(`ArgumentException`). So does a delegate whose signature does not fit the import, or one that
+is asynchronous (`Task` / `ValueTask`: WASM cannot wait). An import with a `string` result is not
+supported (`NotSupportedException`). If a callback typed `object` returns a value of the wrong type,
+the call fails with `InvalidOperationException` naming the callback, the import, its result type and
+the value. An exception thrown by a callback reaches the caller of `Call` unchanged.
 
 ### Version pinning
 
@@ -83,7 +91,25 @@ var result = pool.Run(m => m.Call("add", 20, 22)); // 42
 
 ```csharp
 using var m = await Loader.ImportAsync("https://example.com/math.wasm");
+
+// Each fetch (the .wit, then the .wasm) has a time limit, 30 s by default; a token cancels the load.
+using var cts = new CancellationTokenSource();
+using var m2 = await Loader.ImportAsync("https://example.com/math.wasm", null,
+    new LoadOptions { Timeout = TimeSpan.FromSeconds(5), CancellationToken = cts.Token });
 ```
+
+Each file is requested once, never retried. An HTTP error fails the load with an
+`HttpRequestException` naming the status and the URL. A fetch that does not finish in time throws
+`TimeoutException` naming the URL and the limit. `Timeout.InfiniteTimeSpan` disables the limit.
+
+### When is a module raw?
+
+The companion `.wit` is the `.wasm` path with its suffix replaced (`math.wasm` → `math.wit`; a
+URL's query and fragment are dropped). Raw exports are used **only when the `.wit` is absent**: the
+file does not exist, or the server answers 404 or 410. A path that does not end in `.wasm` has no
+`.wit`. Anything else fails the load before the `.wasm` is read: an unreadable file, another HTTP
+status, a network error, the time limit. A `.wit` that does not parse also fails the load
+(`FormatException` naming the `.wit` and the fault), and so does a WIT export the module lacks.
 
 ## Type mapping
 
@@ -96,9 +122,11 @@ using var m = await Loader.ImportAsync("https://example.com/math.wasm");
 | `bool` | `bool` | `bool` |
 | `string` | `string` | `string` |
 
-`Call` returns `object?` boxing the value above (`null` for a void export). A module with no
-companion `.wit` is loaded with raw exports; `Call` then marshals by .NET argument type (strings
-require a `.wit`).
+Typed calls are checked, never converted: each argument must be exactly the .NET type above (`3`
+is an `int`, so an `f64` parameter needs `3.0`; a `bool` is never an integer). A wrong count or type
+throws `ArgumentException` naming the export and the parameter. `Call` returns `object?` boxing the
+value above (`null` for a void export). A module with no companion `.wit` is loaded with raw
+exports; `Call` then marshals by .NET argument type (strings require a `.wit`).
 
 ## Test
 
@@ -106,10 +134,12 @@ require a `.wit`).
 dotnet test tests
 ```
 
-The suite (`tests/LoaderTests.cs`) covers the cross-language SPEC §8 fixtures — numeric round-trip,
-bool normalization, string params/returns (Canonical ABI), host import callbacks — plus `Bind`, the
-singleton, and the concurrent instance pool. The fixtures are the stamped reference set from
-`universalWasmLoader-js` (`tests/fixtures.json`).
+The suite covers the cross-language SPEC §8 fixtures (`tests/LoaderTests.cs`): numeric round-trip,
+bool normalization, string params/returns (Canonical ABI) and host import callbacks, plus `Bind`,
+the singleton and the concurrent instance pool. It also runs SPEC 4.0.0's "Refusals" table row by
+row (`tests/RefusalTests.cs`), with the http rows served by a local test server that counts
+requests. The fixtures are the stamped reference set from `universalWasmLoader-js`
+(`tests/fixtures.json`).
 
 ## Versioning
 
@@ -124,6 +154,7 @@ breaking change may ship as a minor version, but it is always listed below.
 
 | Version | Change |
 | --- | --- |
+| _next release_ | **SPEC 4.0.0: failures are loud.** (1) A `.wit` that exists but cannot be read, or an http(s) `.wit` answering anything but 2xx / 404 / 410, now fails the load instead of loading raw exports; a `.wit` that does not parse (an unsupported type such as `u32` included) fails it too, as does a WIT export the module lacks. A path not ending in `.wasm` no longer looks for `<path>.wit`. (2) Every WIT import needs a host callback whose delegate fits the import; a missing, mistyped or asynchronous one is refused at load (it used to return 0 when called). A callback's wrong return value fails the call instead of being converted. (3) `Call` no longer converts arguments: pass exactly `int` / `long` / `float` / `double` / `bool` / `string`. (4) `ImportAsync(source, callbacks)` became `ImportAsync(source, callbacks, options)`: rebuild against the new version. Each http(s) fetch now has a 30 s limit (it was HttpClient's 100 s default), and the `.wit` is fetched before the `.wasm`. |
 
 ## License
 
