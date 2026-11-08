@@ -29,8 +29,10 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
 - **No committed shell scripts.** CI YAML `run:` steps only launch commands.
 - **Bun scripts use `node:*`, web APIs and `Bun.*`** (workspace rule 1), never `Deno.*`. `scripts/`
   needs no csproj exclusion: the SDK compiles only `.cs`.
-- **Use `dotnet10`, never bare `dotnet`** (owner, 2026-10-22): bare `dotnet` has no SDK on the
-  development machine; see [overview.md](overview.md) → "Toolchain". `compat.ts` picks `$UWL_DOTNET`,
+- **Use `dotnet10`, never bare `dotnet`** (owner, 2026-10-22; reason restated by the owner
+  2026-11-08): on the development machine bare `dotnet` is .NET 8, kept because installed
+  programs depend on that version, and `dotnet10` is .NET 10. This repo is .NET 10 only from
+  0.2.0. Never change what bare `dotnet` points at. See [overview.md](overview.md) → "Toolchain". `compat.ts` picks `$UWL_DOTNET`,
   else `dotnet10` when on PATH, else `dotnet` (CI).
 - **Letter H15 (workspace `handoffs.md`) — closed by the workspace 2026-10-22** on this repo's
   earlier record ("nothing to port", checked at `f81cb55` = `9bb0742` after the history rewrite;

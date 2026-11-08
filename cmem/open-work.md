@@ -5,15 +5,6 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Waiting on the owner
 
-- **The 0.2.0 publish run** (owner: "yes release 0.2.0", "option 2", "move to dotnet 10",
-  2026-11-07). The tag `v0.2.0` moved from `93cb185` (which started nothing) to the memory commit
-  after `eca6c78`, and was pushed; that push runs `publish.yml` (`checks` → `publish` →
-  `release`). It is the first run of the tag trigger, of the `release` job, and of the
-  `NuGet/login` hash pin. If the org's Actions policy lists `NuGet/login@v1` by tag, the run ends
-  in `startup_failure` with nothing published. The fix is then the POLICY (allow
-  `NuGet/login@*`), then a re-run: a re-run reads `publish.yml` at the tagged commit, so
-  changing the pin instead needs a new commit, which means moving the tag again (owner's word) or
-  releasing 0.2.1.
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
   `v0.1.0` + `v0.1.1` only (all post-purge), no LFS; old commits still served by hash (e.g.
@@ -34,7 +25,9 @@ belong to the workspace session are listed only while not yet done there.
   conformance; `Bind` covers the destructure pattern. ([overview.md](overview.md) → "Public API")
 
 (Done 2026-11-07 and removed: "`TryFetchWit` swallows every error", fixed under SPEC 4.0.0 §2 in
-`9e131b2`; record in [overview.md](overview.md) → "Canonical ABI / SPEC conformance".)
+`9e131b2`; record in [overview.md](overview.md) → "Canonical ABI / SPEC conformance". Done
+2026-11-08: 0.2.0 published, C30's split, keep-or-drop `net8.0` (dropped); record in
+[overview.md](overview.md) → "Build / release flow".)
 
 ## Waiting on the workspace session (this repo's side is done)
 

@@ -11,8 +11,8 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 - **Language / runtime:** C# on .NET, built on **Wasmtime** (NuGet `Wasmtime`, the Bytecode Alliance
   wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
 - **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published: 0.1.0
-  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0.** 0.2.0 (SPEC 4.0.0) is tagged and pushed;
-  its nuget.org publish waits on the GitHub Release (see "Current state").
+  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0, net8.0 + net10.0; 0.2.0 (2026-11-08),
+  SPEC 4.0.0, net10.0 only.**
 
 ## Repository home — `synapticforge1` organization (recorded 2026-10-20)
 
@@ -41,8 +41,9 @@ Spiked here first (Wasmtime 44 restores + runs on win-x64; `add(3,4)=7`, env imp
 before writing the port.
 
 **Toolchain:** needs the **.NET 10 SDK**. **Run it as `dotnet10`, never bare `dotnet`** (owner,
-2026-10-22; workspace Tooling rule 1): on the development machine bare `dotnet` resolves to a
-runtime-only install with no SDK. Where `dotnet10` comes from is a machine fact, kept out of this
+2026-10-22; workspace Tooling rule 1): on the development machine bare `dotnet` is .NET 8, kept
+for installed programs that depend on that version (owner, 2026-11-08; the earlier note here
+said "a runtime-only install with no SDK"), and `dotnet10` is .NET 10. Where `dotnet10` comes from is a machine fact, kept out of this
 committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22: `dotnet10 --version`
 → 10.0.402. Build, test and pack go through it; committed scripts are Bun (`bun scripts/<name>.ts`,
 [working-rules.md](working-rules.md)). Library and test
@@ -53,9 +54,8 @@ project target **net10.0** only, from 0.2.0 (owner, 2026-11-07; 0.1.x was net8.0
 
 Re-aligned to SPEC 4.0.0 on 2026-11-07 (workspace row C29): `d5b50c1` (surface re-baseline alone)
 and `9e131b2` (behaviour + tests). **0.2.0** (gate floor major; pre-1.0 Rule 6 minor; README
-Breaking Changes row): bumped in `93cb185`; .NET 10 only and publish-on-tag-push in `eca6c78`.
-The publish run's outcome is in [open-work.md](open-work.md) ("Build / release flow" has the
-history). Source (namespace `UniversalWasmLoader`):
+Breaking Changes row): bumped in `93cb185`; .NET 10 only and publish-on-tag-push in `eca6c78`;
+**published to nuget.org 2026-11-08** from tag `v0.2.0` = `25a3d10` ("Build / release flow"). Source (namespace `UniversalWasmLoader`):
 
 - `Wit.cs` — the strict WIT parser: a port of loader-js 2.0.0's `wit-parser.js`, with the same
   grammar (SPEC §2 "Parsing") and the same messages, as `FormatException`. An unknown type is an
@@ -273,8 +273,15 @@ a future add (not required for SPEC §7 conformance).
 - **0.2.0 (SPEC 4.0.0, .NET 10 only) on 2026-11-07** (owner: "yes release 0.2.0", then
   "option 2" and "move to dotnet 10"). The tag was first pushed at `93cb185`, under the
   Release-triggered workflow, which started nothing. Checked before moving it: no GitHub Release,
-  no 0.2.0 on nuget.org, no `publish.yml` run since 0.1.1. The tag then moved to the commit with
-  the tag-push workflow and the .NET 10 move; the result is in [open-work.md](open-work.md).
+  no 0.2.0 on nuget.org, no `publish.yml` run since 0.1.1. The tag then moved to `25a3d10`
+  (the tag-push workflow and the .NET 10 move; `compat.ts release` passed there locally) and was
+  force-pushed.
+- ✅ **0.2.0 PUBLISHED 2026-11-08** by that tag push: `publish.yml` run 42441589123, all three
+  jobs `success`. This was the first run of the tag trigger, of the `release` job, and of the
+  hash pins in a credentialed job, so the org's Actions policy accepts `NuGet/login` pinned by
+  hash. Read back: nuget.org flat-container lists 0.1.0, 0.1.1, 0.2.0; the 0.2.0 nuspec names
+  `net10.0` only, `Wasmtime` 44.0.0, repository commit `25a3d10`. The GitHub Release `v0.2.0` was
+  created by the workflow, with the `.nupkg` and `.snupkg` attached.
 - **Releasing goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, push both; `publish.yml` re-runs the gate on the tag
