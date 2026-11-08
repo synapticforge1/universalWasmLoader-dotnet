@@ -3,26 +3,22 @@
 One line per item; done items are removed (their record lives in the topic file named). Items that
 belong to the workspace session are listed only while not yet done there.
 
-## Where we stopped (2026-11-08, paused by the owner)
+## Where things stand (2026-11-08, end of the second session that day)
 
-- **Done this session (2026-11-07/08):** SPEC 4.0.0 (C29) → **0.2.0 published** (.NET 10 only;
-  tag `v0.2.0` = `25a3d10`); `publish.yml` runs on a tag push in three jobs with hash-pinned
-  actions (C30); `runtimes.csx` checks the tested .NET lines against Microsoft's index; the
-  scripts moved from Bun to `.csx` via the pinned local dotnet-script; `dotnet11` added and
-  `DOTNET_ROOT` kept on the .NET 8 install (owner). `main` = `05e75cf` on GitHub, CI green.
-- **Last check before the pause:** with a fresh environment and dotnet-script's cache cleared,
-  every script ran through `dotnet10 tool run dotnet-script` (fixtures 12/12, runtimes check +
-  24/24, gate 59/59, surface 27 symbols, report v0.2.0's tests 59/59).
-- **Next, in order:** (1) nothing urgent. The next forced item is .NET 11 GA (Backlog below),
-  which blocks releases until it is added. (2) Re-read the ledger at session start for answers
-  or closes on C29, C30, H29, C32. (3) The owner's two items below (purge request; the
-  workspace's tooling-table row).
-- **Resumed 2026-11-08 (owner: "proceed with remaining items"):** ledger re-read, no new rows,
-  none of this repo's closed. .NET 11 is still rc.3 (`go-live`), so its item waits. A `dotnet11`
-  dry run found the saved user **`MSBuildSDKsPath` set to the 11 preview's SDK**: `dotnet10
-  build` failed in every new terminal (yesterday's "fresh environment" check had reset only
-  `PATH` / `DOTNET_ROOT`). Removed on the owner's "yes"; `dotnet10` verified green; the rule is
-  in [working-rules.md](working-rules.md).
+- **Released and green:** **0.2.0 on nuget.org** (SPEC 4.0.0, .NET 10 only; tag `v0.2.0` =
+  `25a3d10`), released by tag push through the three-job `publish.yml` (hash-pinned actions,
+  the OIDC credential in the `publish` job only). Scripts are `.csx` via the pinned local
+  dotnet-script. **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
+  `tests-net11-preview`, run 42500152048 green). `main` = `48ac7b1` on GitHub.
+- **Machine (owner's rules, [working-rules.md](working-rules.md)):** versions separated by
+  command (`dotnet` = .NET 8 programs, `dotnet10`, `dotnet11`); `DOTNET_ROOT` stays the .NET 8
+  install; `MSBuildSDKsPath` stays unset. Its removal on 2026-11-08 fixed `dotnet10 build`, which
+  had failed in every new terminal since the 11 preview install saved it. Check both after any
+  scoop .NET install, and restart VS Code to pick up a changed environment.
+- **Ledger (owner: "close the items noted"):** C32 closed; this repo's part of C29 / C30 / H29
+  closed, the rows open for other repos (below).
+- **Next, in order:** (1) .NET 11 GA (Backlog): switch the RC setup to required, as listed
+  there. (2) At each session start, re-read the ledger. (3) The owner's purge request (below).
 
 ## Waiting on the owner
 
