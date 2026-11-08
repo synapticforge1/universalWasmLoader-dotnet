@@ -11,10 +11,9 @@ direct, strings encoded/decoded through linear memory, booleans normalized).
 - Conforms to the cross-language **SPEC.md v4.0.0** (Canonical ABI, callee-allocated string returns +
   `cabi_post_<name>`; loud failures: only an absent `.wit` means raw exports, typed calls and host
   callbacks are checked, never coerced, and each http(s) fetch has a time limit).
-- Targets **net8.0** and **net10.0**, and is tested on **every .NET line Microsoft supports**, LTS
-  and STS: today .NET 8, 9 and 10. .NET 9 uses the `net8.0` build. CI checks the list against
-  Microsoft's release index, so a new line is required from its GA and a line leaves after its
-  end of support.
+- Targets **.NET 10** (`net10.0`, LTS) from 0.2.0. .NET 8 and 9 reach end of support on
+  2026-11-10; use 0.1.1 there. CI checks the tested lines against Microsoft's release index: every
+  supported LTS and STS line is required from its GA until 30 days before its end of support.
 
 ## Install
 
@@ -137,10 +136,9 @@ exports; `Call` then marshals by .NET argument type (strings require a `.wit`).
 dotnet test tests
 ```
 
-This runs the suite once per target framework (`net8.0`, `net9.0`, `net10.0`), so each of those
-.NET runtimes must be installed; `dotnet test tests -f net10.0` runs one.
-`bun scripts/runtimes.ts` checks that every supported .NET line is a test target and installed in
-CI.
+This runs the suite once per target framework of the test project (today `net10.0`).
+`bun scripts/runtimes.ts` checks that every required .NET line is a test target and is installed
+by each CI job that runs the tests.
 
 The suite covers the cross-language SPEC §8 fixtures (`tests/LoaderTests.cs`): numeric round-trip,
 bool normalization, string params/returns (Canonical ABI) and host import callbacks, plus `Bind`,
@@ -162,7 +160,7 @@ breaking change may ship as a minor version, but it is always listed below.
 
 | Version | Change |
 | --- | --- |
-| 0.2.0 | **SPEC 4.0.0: failures are loud.** (1) A `.wit` that exists but cannot be read, or an http(s) `.wit` answering anything but 2xx / 404 / 410, now fails the load instead of loading raw exports; a `.wit` that does not parse (an unsupported type such as `u32` included) fails it too, as does a WIT export the module lacks. A path not ending in `.wasm` no longer looks for `<path>.wit`. (2) Every WIT import needs a host callback whose delegate fits the import; a missing, mistyped or asynchronous one is refused at load (it used to return 0 when called). A callback's wrong return value fails the call instead of being converted. (3) `Call` no longer converts arguments: pass exactly `int` / `long` / `float` / `double` / `bool` / `string`. (4) `ImportAsync(source, callbacks)` became `ImportAsync(source, callbacks, options)`: rebuild against the new version. Each http(s) fetch now has a 30 s limit (it was HttpClient's 100 s default), and the `.wit` is fetched before the `.wasm`. |
+| 0.2.0 | **SPEC 4.0.0: failures are loud.** (1) A `.wit` that exists but cannot be read, or an http(s) `.wit` answering anything but 2xx / 404 / 410, now fails the load instead of loading raw exports; a `.wit` that does not parse (an unsupported type such as `u32` included) fails it too, as does a WIT export the module lacks. A path not ending in `.wasm` no longer looks for `<path>.wit`. (2) Every WIT import needs a host callback whose delegate fits the import; a missing, mistyped or asynchronous one is refused at load (it used to return 0 when called). A callback's wrong return value fails the call instead of being converted. (3) `Call` no longer converts arguments: pass exactly `int` / `long` / `float` / `double` / `bool` / `string`. (4) `ImportAsync(source, callbacks)` became `ImportAsync(source, callbacks, options)`: rebuild against the new version. Each http(s) fetch now has a 30 s limit (it was HttpClient's 100 s default), and the `.wit` is fetched before the `.wasm`. (5) **.NET 10 only:** the `net8.0` build is gone, so .NET 8 and 9 projects (both out of support on 2026-11-10) cannot install 0.2.0; they stay on 0.1.1. |
 
 ## License
 

@@ -1,18 +1,25 @@
 name: Publish to NuGet
 
 # Publishes the package via NuGet Trusted Publishing (OIDC) — no API keys stored.
-# Triggers when a GitHub Release is published, or manually from the Actions tab ON A TAG.
+# Triggers when a `v*` tag is pushed (owner, 2026-11-07: "option 2", the loader-dart shape), or
+# manually from the Actions tab ON A TAG. A release is therefore: `bun scripts/compat.ts bump
+# <kind>`, commit, `git tag vX.Y.Z`, push the commit and the tag. The last job creates the GitHub
+# Release; nobody drafts one by hand.
 #
 # Two jobs, on purpose (workspace C30, owner 2026-11-07): an `id-token: write` job's every step can
 # mint the OIDC token that NuGet/login exchanges for a push key. So `checks` runs everything that
 # executes package code (restore, build, the tests, the compatibility gate, pack: MSBuild targets
 # from NuGet packages, the PublicAPI analyzer) with a read-only token and NO id-token, and hands
 # the packed files on as an artifact. `publish` is the only job with `id-token: write`; it runs no
-# package code: it checks the tag, downloads the artifact, logs in and pushes.
+# package code: it checks the tag, downloads the artifact, logs in and pushes. `release` (only
+# `contents: write`, after a successful push) creates the GitHub Release with the packages attached.
 # Every `uses:` is pinned to a commit hash (the tag it was resolved from is in the comment).
+# No `concurrency:` on purpose (workspace C30 (2)): a cancelled run could stop after the push to
+# nuget.org and before the Release; every job re-checks the tag instead.
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -39,7 +46,6 @@ jobs:
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: |
-            8.0.x
             10.0.x
 
       - name: Setup Bun
@@ -50,7 +56,10 @@ jobs:
       - name: Fixtures match the stamp
         run: bun scripts/fixtures.ts
 
-      - name: Test
+      - name: Every supported .NET line is covered
+        run: bun scripts/runtimes.ts
+
+      - name: Test (every target framework)
         run: dotnet test tests
 
       - name: Compatibility gate self-test
@@ -124,3 +133,34 @@ jobs:
           --api-key "$NUGET_API_KEY"
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # only for `gh release create`
+
+    steps:
+      - name: The tag still points at this commit
+        env:
+          TAG: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          got="$(git ls-remote "https://github.com/$REPO" "refs/tags/$TAG" "refs/tags/$TAG^{}" | tail -n 1 | cut -f 1)"
+          test "$got" = "$SHA" || { echo "::error::tag $TAG is at '$got', not $SHA"; exit 1; }
+
+      - name: Download the package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: nupkg
+          path: out
+
+      # `gh` is preinstalled on the runner; --verify-tag refuses to create a tag that is not there.
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: gh release create "$TAG" out/* --repo "$REPO" --title "$TAG" --generate-notes --verify-tag

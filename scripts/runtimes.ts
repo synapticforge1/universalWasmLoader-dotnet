@@ -6,27 +6,41 @@
  * Which lines: Microsoft's own release index (`releases-index.json`), every channel whose support
  * phase is `active` or `maintenance` and whose end-of-support date has not passed. That is decided
  * by the date, never by a list here, so a line ENTERS this check on its GA (its phase becomes
- * `active`; a `go-live` release candidate is not yet required) and LEAVES it after its EOL date.
+ * `active`; a `go-live` release candidate is not yet required) and LEAVES it once it is within
+ * LEAVING_DAYS (30) of its end-of-support date: a leaving line is reported, not required (owner,
+ * 2026-11-07: "I think we need to move to dotnet 10 since the EOL for 8 and 9 are this coming
+ * week" — the package is .NET 10 only from 0.2.0).
  *
  * What it checks: each supported line is (1) a target of the test project
  * (`tests/UniversalWasmLoader.Tests.csproj` `<TargetFrameworks>`, as `net<major>.0`) and (2) an SDK
- * that CI installs (`.github/workflows/validate.yml`, the `actions/setup-dotnet` step's
- * `dotnet-version`, as `<major>.0.x`). A missing line fails, naming the file to change. A target
- * that is no longer supported is reported, not failed: the package may still ship that asset.
+ * that EVERY CI job running `dotnet test` installs (in each `.github/workflows/*.yml`, that job's
+ * `actions/setup-dotnet` `dotnet-version`, as `<major>.0.x`); a job that never runs the tests
+ * (e.g. the push-only `publish` job) is not checked. A missing line fails, naming the file and job.
+ * A target that is no longer supported is reported, not failed: the package may still ship it.
  *
  * ```sh
  * bun scripts/runtimes.ts            # the check (fetches the index)
  * bun scripts/runtimes.ts selftest   # pure-function checks, no network
  * ```
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 
 const INDEX = "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json";
 const ROOT = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
 const TEST_PROJECT = "tests/UniversalWasmLoader.Tests.csproj";
-const VALIDATE = ".github/workflows/validate.yml";
+const WORKFLOWS = ".github/workflows";
+
+/** A supported line this close to its end of support is "leaving": reported, not required. */
+export const LEAVING_DAYS = 30;
+
+/** Whether a line with end-of-support date `eol` (or "none") is leaving on `today`. */
+export function isLeaving(eol: string, today: string): boolean {
+  if (eol === "none") return false;
+  const days = (Date.parse(`${eol}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000;
+  return days <= LEAVING_DAYS;
+}
 
 /** One channel of Microsoft's release index (only the fields used here). */
 export interface Channel {
@@ -62,31 +76,55 @@ export function testTargets(csproj: string): number[] {
   });
 }
 
-/** The `<N>.0.x` majors of every `actions/setup-dotnet` step in a workflow. */
-export function ciSdks(workflowYaml: string): number[] {
-  const wf = Bun.YAML.parse(workflowYaml) as { jobs?: Record<string, { steps?: { uses?: string; with?: Record<string, unknown> }[] }> };
-  const majors: number[] = [];
-  for (const job of Object.values(wf.jobs ?? {})) {
-    for (const step of job.steps ?? []) {
+/** One CI job that runs `dotnet test`, with the `<N>.0.x` majors its `setup-dotnet` installs. */
+export interface TestJob {
+  where: string; // "<workflow file> job <name>"
+  sdks: number[];
+}
+
+/** The jobs of a workflow that run `dotnet test`, each with the SDK majors it installs. */
+export function testJobs(workflowYaml: string, file: string): TestJob[] {
+  type Step = { uses?: string; run?: string; with?: Record<string, unknown> };
+  const wf = Bun.YAML.parse(workflowYaml) as { jobs?: Record<string, { steps?: Step[] }> };
+  const out: TestJob[] = [];
+  for (const [name, job] of Object.entries(wf.jobs ?? {})) {
+    const steps = job.steps ?? [];
+    if (!steps.some((s) => /\bdotnet\s+test\b/.test(s.run ?? ""))) continue;
+    const sdks: number[] = [];
+    for (const step of steps) {
       if (!step.uses?.startsWith("actions/setup-dotnet@")) continue;
       for (const v of String(step.with?.["dotnet-version"] ?? "").split(/\s+/).filter(Boolean)) {
         const n = /^(\d+)\.0\.x$/.exec(v);
-        if (!n) throw new Error(`${VALIDATE}: unexpected dotnet-version "${v}"`);
-        majors.push(Number(n[1]));
+        if (!n) throw new Error(`${file} job ${name}: unexpected dotnet-version "${v}"`);
+        sdks.push(Number(n[1]));
       }
     }
+    out.push({ where: `${file} job ${name}`, sdks });
   }
-  return majors;
+  return out;
 }
 
 /** The problems (empty = pass) and the notes for one set of inputs. */
-export function verdict(supported: { major: number }[], targets: number[], sdks: number[]): { problems: string[]; notes: string[] } {
+export function verdict(
+  supported: { major: number; eol?: string }[],
+  targets: number[],
+  jobs: TestJob[],
+  today = "1970-01-01",
+): { problems: string[]; notes: string[] } {
   const problems: string[] = [];
   const notes: string[] = [];
   if (supported.length === 0) problems.push("the release index lists no supported .NET line (index format changed?)");
-  for (const { major } of supported) {
+  if (jobs.length === 0) problems.push(`no CI job runs \`dotnet test\` (in ${WORKFLOWS})`);
+  const required = supported.filter((s) => !isLeaving(s.eol ?? "none", today));
+  for (const s of supported) {
+    if (!required.includes(s)) notes.push(`.NET ${s.major}.0 is leaving (end of support ${s.eol}): not required`);
+  }
+  if (supported.length > 0 && required.length === 0) problems.push("every supported .NET line is leaving: none would be tested");
+  for (const { major } of required) {
     if (!targets.includes(major)) problems.push(`.NET ${major}.0 is supported but not a test target: add net${major}.0 to ${TEST_PROJECT}`);
-    if (!sdks.includes(major)) problems.push(`.NET ${major}.0 is supported but CI does not install it: add ${major}.0.x to ${VALIDATE}`);
+    for (const job of jobs) {
+      if (!job.sdks.includes(major)) problems.push(`.NET ${major}.0 is supported but ${job.where} does not install it: add ${major}.0.x there`);
+    }
   }
   for (const t of targets) {
     if (!supported.some((s) => s.major === t)) notes.push(`net${t}.0 is still a test target but no longer supported (kept while the package ships that asset?)`);
@@ -101,10 +139,14 @@ async function check(): Promise<number> {
   const today = new Date().toISOString().slice(0, 10);
   const supported = supportedLines(index["releases-index"], today);
   const targets = testTargets(readFileSync(join(ROOT, TEST_PROJECT), "utf8"));
-  const sdks = ciSdks(readFileSync(join(ROOT, VALIDATE), "utf8"));
+  const jobs = readdirSync(join(ROOT, WORKFLOWS))
+    .filter((f) => /\.ya?ml$/.test(f))
+    .sort()
+    .flatMap((f) => testJobs(readFileSync(join(ROOT, WORKFLOWS, f), "utf8"), `${WORKFLOWS}/${f}`));
   console.log(`supported on ${today}: ${supported.map((s) => `${s.major}.0 ${s.type.toUpperCase()} (EOL ${s.eol})`).join(", ")}`);
-  console.log(`test targets: ${targets.map((t) => `net${t}.0`).join(", ")}; CI SDKs: ${sdks.map((s) => `${s}.0.x`).join(", ")}`);
-  const { problems, notes } = verdict(supported, targets, sdks);
+  console.log(`test targets: ${targets.map((t) => `net${t}.0`).join(", ")}`);
+  for (const j of jobs) console.log(`${j.where} (runs dotnet test): SDKs ${j.sdks.map((s) => `${s}.0.x`).join(", ")}`);
+  const { problems, notes } = verdict(supported, targets, jobs, today);
   for (const n of notes) console.log(`note: ${n}`);
   for (const p of problems) console.error(`FAIL: ${p}`);
   if (problems.length === 0) console.log("every supported .NET line is a test target and installed in CI");
@@ -149,17 +191,33 @@ function selftest(): number {
   ok("csproj odd target throws", throws(() => testTargets("<TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>")));
   ok("csproj without targets throws", throws(() => testTargets("<Project/>")));
 
-  const yaml = "jobs:\n  v:\n    steps:\n      - uses: actions/checkout@abc\n      - uses: actions/setup-dotnet@def # v4\n        with:\n          dotnet-version: |\n            8.0.x\n            10.0.x\n";
-  ok("ci sdks", ciSdks(yaml).join() === "8,10");
-  ok("ci odd sdk throws", throws(() => ciSdks(yaml.replace("8.0.x", "8.x"))));
+  const yaml =
+    "jobs:\n  v:\n    steps:\n      - uses: actions/checkout@abc\n      - uses: actions/setup-dotnet@def # v4\n        with:\n          dotnet-version: |\n            8.0.x\n            10.0.x\n      - run: dotnet test tests\n" +
+    "  push:\n    steps:\n      - uses: actions/setup-dotnet@def\n        with:\n          dotnet-version: 10.0.x\n      - run: dotnet nuget push x\n";
+  const jobs = testJobs(yaml, "wf.yml");
+  ok("only the job that runs dotnet test", jobs.length === 1 && jobs[0]!.where === "wf.yml job v");
+  ok("its sdks", jobs[0]!.sdks.join() === "8,10");
+  ok("ci odd sdk throws", throws(() => testJobs(yaml.replace("8.0.x", "8.x"), "wf.yml")));
 
   const sup = [{ major: 8 }, { major: 9 }, { major: 10 }];
-  ok("all covered passes", verdict(sup, [8, 9, 10], [8, 9, 10]).problems.length === 0);
-  const missing = verdict(sup, [8, 10], [8, 10]).problems;
-  ok("a missing line fails twice, naming both files", missing.length === 2 && missing[0]!.includes(TEST_PROJECT) && missing[1]!.includes(VALIDATE));
-  const extra = verdict([{ major: 10 }], [8, 10], [8, 10]);
+  const job = (where: string, sdks: number[]): TestJob => ({ where, sdks });
+  ok("all covered passes", verdict(sup, [8, 9, 10], [job("a", [8, 9, 10]), job("b", [8, 9, 10])]).problems.length === 0);
+  const missing = verdict(sup, [8, 10], [job("a", [8, 10])]).problems;
+  ok("a missing line fails twice, naming the csproj and the job", missing.length === 2 && missing[0]!.includes(TEST_PROJECT) && missing[1]!.includes("a does not"));
+  const oneJob = verdict(sup, [8, 9, 10], [job("a", [8, 9, 10]), job("b", [8, 10])]).problems;
+  ok("a second test job missing a line fails, naming it", oneJob.length === 1 && oneJob[0]!.includes("b does not"));
+  const extra = verdict([{ major: 10 }], [8, 10], [job("a", [8, 10])]);
   ok("an unsupported target is a note, not a failure", extra.problems.length === 0 && extra.notes.length === 1);
-  ok("an empty index fails", verdict([], [10], [10]).problems.length === 1);
+  ok("an empty index fails", verdict([], [10], [job("a", [10])]).problems.length === 1);
+  ok("no test job fails", verdict([{ major: 10 }], [10], []).problems.length === 1);
+
+  const lines = [{ major: 8, eol: "2026-11-10" }, { major: 9, eol: "2026-11-10" }, { major: 10, eol: "2028-11-14" }];
+  const only10 = verdict(lines, [10], [job("a", [10])], "2026-11-07");
+  ok("lines within 30 days of EOL are leaving, not required", only10.problems.length === 0 && only10.notes.filter((n) => n.includes("leaving")).length === 2);
+  ok("31 days before EOL a line is still required", verdict(lines, [10], [job("a", [10])], "2026-10-10").problems.length === 4);
+  ok("the 30-day boundary is leaving", isLeaving("2026-12-07", "2026-11-07") && !isLeaving("2026-12-08", "2026-11-07"));
+  ok("no EOL date is never leaving", !isLeaving("none", "2099-01-01"));
+  ok("all leaving fails", verdict([{ major: 9, eol: "2026-11-10" }], [9], [job("a", [9])], "2026-11-07").problems.length === 1);
 
   console.log(`selftest: ${passed}/${passed + failed} passed`);
   return failed === 0 ? 0 : 1;
