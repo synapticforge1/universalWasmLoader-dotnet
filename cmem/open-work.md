@@ -3,7 +3,25 @@
 One line per item; done items are removed (their record lives in the topic file named). Items that
 belong to the workspace session are listed only while not yet done there.
 
+## Where we stopped (2026-11-08, paused by the owner)
+
+- **Done this session (2026-11-07/08):** SPEC 4.0.0 (C29) → **0.2.0 published** (.NET 10 only;
+  tag `v0.2.0` = `25a3d10`); `publish.yml` runs on a tag push in three jobs with hash-pinned
+  actions (C30); `runtimes.csx` checks the tested .NET lines against Microsoft's index; the
+  scripts moved from Bun to `.csx` via the pinned local dotnet-script; `dotnet11` added and
+  `DOTNET_ROOT` kept on the .NET 8 install (owner). `main` = `05e75cf` on GitHub, CI green.
+- **Last check before the pause:** with a fresh environment and dotnet-script's cache cleared,
+  every script ran through `dotnet10 tool run dotnet-script` (fixtures 12/12, runtimes check +
+  24/24, gate 59/59, surface 27 symbols, report v0.2.0's tests 59/59).
+- **Next, in order:** (1) nothing urgent. The next forced item is .NET 11 GA (Backlog below),
+  which blocks releases until it is added. (2) Re-read the ledger at session start for answers
+  or closes on C29, C30, H29, C32. (3) The owner's two items below (purge request; the
+  workspace's tooling-table row).
+
 ## Waiting on the owner
+
+- **Workspace tooling table:** its C# row still reads "C# → Bun". Ledger row C32 proposes "C# →
+  `.csx` via a pinned local dotnet-script". That is the workspace's file, the owner's change.
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
