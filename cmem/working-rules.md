@@ -34,6 +34,21 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   `~\.dotnet\tools\.store` from the 2026-10-22 trial. An installed tool would be a CI dependency
   like Bun, so it gains nothing. To revisit once C# scripting works here: the `UseAppHost=false`
   route, porting `fixtures.ts` first with an output diff (workspace port rule).
+- ✅ **`dotnet-script` RUNS here since 2026-11-08** (supersedes the 2026-10-22 bullet above and
+  the "neither is installed" clause just above). The owner's correction: the command is
+  `dotnet10 dotnet-script <file>`; `dotnet10 script <file>` and plain `dotnet-script <file>` work
+  too (the owner confirmed `dotnet10 script`). Measured with a throwaway `.csx` (deleted):
+  `dotnet-script` 2.0.1 is a `dotnet10` global tool (shim `~\.dotnet\tools\dotnet-script.exe`,
+  which my check earlier the same day found absent). It runs on the .NET 10.0.14 runtime, with
+  args after `--`; 13.1 s first run (restore + compile), 0.9 s cached. It **builds no `.exe`**:
+  its `%TEMP%\dotnet-script\…` cache (the script's full path mirrored, 218 chars for a scratchpad
+  script) held one compiled `.dll` + restore files, and the script runs inside the tool's
+  process. `NETSDK1083` and the MAX_PATH overflow did not recur. So it fits Tooling rule 1 ("no
+  mechanism that builds an executable"). **Not adopted yet:** switching needs the owner's word
+  (the workspace table says "C# → Bun"), a CI install step (`dotnet tool install -g
+  dotnet-script --version 2.0.1`: third-party NuGet code in the token-less jobs, as `setup-bun`
+  is now), and the port rule's output diff per script (`fixtures.ts`, `runtimes.ts`, which
+  needs a YAML reader, `compat.ts`).
 - **Scope:** the rule governs COMMITTED scripts kept for repeated use (what would otherwise be a
   `.ps1`/`.sh`/`.cmd`). Product code and the test suite are not scripts; project tasks stay plain
   `dotnet10 build` / `dotnet10 test tests` / `dotnet10 pack`. **A one-time script deleted after use
