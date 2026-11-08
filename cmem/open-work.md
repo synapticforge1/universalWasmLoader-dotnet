@@ -15,7 +15,7 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Backlog
 
-- **.NET 11 GA (expected mid-November 2026):** `bun scripts/runtimes.ts` then fails in CI, and
+- **.NET 11 GA (expected mid-November 2026):** `scripts/runtimes.csx` then fails in CI, and
   BLOCKS releases, until `net11.0` is a test target and `11.0.x` is installed in both workflows'
   test jobs. That needs a .NET 11 SDK locally (`dotnet10` cannot build `net11.0`). Whether the
   LIBRARY should gain a `net11.0` asset is a separate question; .NET 11 consumers get the

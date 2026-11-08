@@ -8,13 +8,20 @@ loader-dart's and loader-c's gates (`../universalWasmLoader-{dart,c}/cmem/compat
 
 | Rule | Where | Runs in |
 | --- | --- | --- |
-| 1, the SURFACE | `PublicAPI.Shipped.txt` + `PublicAPI.Unshipped.txt` (committed), enforced by `Microsoft.CodeAnalysis.PublicApiAnalyzers` 5.0.0: RS0016/RS0017/RS0036/RS0037 are build errors | every build; `bun scripts/compat.ts surface --check` in CI `validate` |
-| 2, the FLOOR | `scripts/compat.ts` `floorOf` | `bump` (refuses below it), `report`, `release` (CI `publish`, blocking, before pack) |
-| 3, BEHAVIOUR | `compat.ts` `previousTests` | same places; required green unless the floor is major |
+| 1, the SURFACE | `PublicAPI.Shipped.txt` + `PublicAPI.Unshipped.txt` (committed), enforced by `Microsoft.CodeAnalysis.PublicApiAnalyzers` 5.0.0: RS0016/RS0017/RS0036/RS0037 are build errors | every build; `compat.csx -- surface --check` in CI `validate` |
+| 2, the FLOOR | `scripts/compat.csx` `FloorOf` | `bump` (refuses below it), `report`, `release` (CI `publish`, blocking, before pack) |
+| 3, BEHAVIOUR | `compat.csx` `PreviousTests` | same places; required green unless the floor is major |
 | 4, deprecate first | README `### ⚠️ Breaking Changes` | a major floor requires a `\| _next release_ \|` row; `bump` stamps the version into it; `release` requires the version's row |
 | 5, re-baseline alone | the build/`surface --check` refusal | an intended API change updates the PublicAPI files in its own commit, with the reason |
 | 6, pre-1.0 | `problems` | 0.y.z: a minor is allowed where the floor says major; the row is still mandatory |
-| self-test | `bun scripts/compat.ts selftest` (59 checks, 2026-10-22) | CI `validate` and `publish`; no git, build or network |
+| self-test | `compat.csx -- selftest` (59 checks; `compat.ts` until 2026-11-08) | CI `validate` and `publish`; no git, build or network |
+
+**The gate is `scripts/compat.csx` since 2026-11-08** (owner: "move them"): run it as `dotnet10
+tool run dotnet-script scripts/compat.csx -- <command>`. It is a line-for-line port of the Bun
+`compat.ts`, proven equivalent before the `.ts` was removed. Both ran in two throwaway clones
+through refused, allowed, release, stale-surface and red-previous-tests cases, with identical
+verdicts, exit codes and `git diff`s: [working-rules.md](working-rules.md) → "Committed
+scripts". The sections below describe the Bun version's dates, and their facts still hold.
 
 **The surface:** the analyzer's declared API (one line per public symbol, nullable annotations
 included, e.g. `static UniversalWasmLoader.Loader.Load(string! path, UniversalWasmLoader.Callbacks?
@@ -30,7 +37,7 @@ dependency.
 compiler runs, and on exFAT an incremental build was seen to reuse stale output after an edit
 (best-practices L4).
 
-**Updating it:** `bun scripts/compat.ts surface` runs `dotnet format analyzers --diagnostics RS0016
+**Updating it:** `dotnet10 tool run dotnet-script scripts/compat.csx -- surface` runs `dotnet format analyzers --diagnostics RS0016
 RS0037`, which appends new symbols to Unshipped. A removed symbol is reported by the build (RS0017);
 delete its Unshipped line, or add `*REMOVED*<line>` to Unshipped when it had shipped.
 
@@ -50,7 +57,7 @@ rewritten to the CURRENT `UniversalWasmLoader.csproj` (exactly one match, or the
 exit 0, M > 0, N = 0). On RED the last 15 lines are printed. Temp dirs and the worktree are always
 removed.
 
-**Reviewed exception — v0.1.0** (`UNGATED` in `compat.ts`): v0.1.0 = commit `d990087` (the nuspec
+**Reviewed exception — v0.1.0** (`UNGATED` in `compat.csx`): v0.1.0 = commit `d990087` (the nuspec
 on nuget.org names `04b1b6b`, its pre-rewrite hash). Its tree has no `tests/` (gitignored then) and
 no PublicAPI files. Rule 3 is exempt for it; its Rule 1 baseline is the first committed
 `PublicAPI.Shipped.txt`, which was generated from library sources byte-identical to v0.1.0's
