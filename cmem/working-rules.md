@@ -83,6 +83,19 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   tool run dotnet-script` all pass (2026-11-08). Scoop's .NET SDK installs have overwritten it
   (twice); the machine notes say how to check and restore it (the workspace's
   `cmem/local/environment.md`).
+- 🔒 **The .NET versions stay separated by COMMAND, and `MSBuildSDKsPath` stays unset** (owner,
+  2026-11-08: "lets make sure that the versions stay separated to avoid issues that clash
+  between versions", then "yes" to removing it). `dotnet` = the .NET 8 programs, `dotnet10` =
+  SDK 10, `dotnet11` = SDK 11; switching versions means typing the other command. The
+  `MSBuildSDKsPath` environment variable forces ONE SDK's build logic on every SDK. The .NET 11
+  preview install had saved it pointing at SDK 11, and then `dotnet10 build` failed in every new
+  terminal (`MSB4216`). Pointing at SDK 10 (an older shell's value), it made `dotnet11` refuse
+  `net11.0` (`NETSDK1045`). Removed from the user environment 2026-11-08; with it unset, the
+  build, 59/59 tests, the Release build and the scripts pass on `dotnet10`. Never set it for this
+  repo's work. After a scoop .NET install, check it along with `DOTNET_ROOT` (machine notes).
+  A shell started before the change keeps the old values (VS Code's terminals did): restart it.
+  **A check of "a new terminal" must rebuild the WHOLE environment from the saved values**, not
+  only `PATH` / `DOTNET_ROOT`. The 2026-11-08 check that missed this reset only those two.
 - **Letter H15 (workspace `handoffs.md`) — closed by the workspace 2026-10-22** on this repo's
   earlier record ("nothing to port", checked at `f81cb55` = `9bb0742` after the history rewrite;
   `git grep -i -E 'deno|\bbun\b|\bnode\b|npx'` matched nothing; the word boundaries matter: without

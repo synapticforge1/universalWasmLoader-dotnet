@@ -17,6 +17,12 @@ belong to the workspace session are listed only while not yet done there.
   which blocks releases until it is added. (2) Re-read the ledger at session start for answers
   or closes on C29, C30, H29, C32. (3) The owner's two items below (purge request; the
   workspace's tooling-table row).
+- **Resumed 2026-11-08 (owner: "proceed with remaining items"):** ledger re-read, no new rows,
+  none of this repo's closed. .NET 11 is still rc.3 (`go-live`), so its item waits. A `dotnet11`
+  dry run found the saved user **`MSBuildSDKsPath` set to the 11 preview's SDK**: `dotnet10
+  build` failed in every new terminal (yesterday's "fresh environment" check had reset only
+  `PATH` / `DOTNET_ROOT`). Removed on the owner's "yes"; `dotnet10` verified green; the rule is
+  in [working-rules.md](working-rules.md).
 
 ## Waiting on the owner
 
@@ -25,7 +31,7 @@ belong to the workspace session are listed only while not yet done there.
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
-  `v0.1.0` + `v0.1.1` only (all post-purge), no LFS; old commits still served by hash (e.g.
+  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` added 2026-11-08, also post-purge), no LFS; old commits still served by hash (e.g.
   `f81cb55`, `f1623bd`). The request lists the 29 orphaned commits that were ever on GitHub (9
   before purge 1, 20 between the purges; full ids from the private bundles in the workspace's
   `cmem/local/backups/`) and gives `1588c76` / `0698e13` as the first changed commits (filter-branch
@@ -42,6 +48,11 @@ belong to the workspace session are listed only while not yet done there.
   which otherwise picks `dotnet10`. The 11 SDK builds `net10.0` too. CI installs both SDKs,
   and its `dotnet` then resolves to the newest. Whether the LIBRARY should gain a `net11.0`
   asset is a separate question; .NET 11 consumers get the `net10.0` one meanwhile.
+  **Learned in a 2026-11-08 dry run:** put `net11.0` into the test project's
+  `<TargetFrameworks>` itself. Overriding it from the command line (`-p:TargetFrameworks=…`)
+  also reaches the library through the project reference, and restore and build then disagree
+  (`NETSDK1005`). Before any 11 build, check `MSBuildSDKsPath` is unset (it made `dotnet11`
+  build with SDK 10's targets: `NETSDK1045`).
 
 - **Source-generator typed interface** (PORT_PROMPT item 4): not built; not required for SPEC
   conformance; `Bind` covers the destructure pattern. ([overview.md](overview.md) → "Public API")
