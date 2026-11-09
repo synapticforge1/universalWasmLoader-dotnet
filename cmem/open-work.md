@@ -39,8 +39,28 @@ belong to the workspace session are listed only while not yet done there.
   Publish run 42638787863 green in all three jobs. nuget.org lists 0.2.1 (nuspec commit
   `62386be`), and GitHub Release `v0.2.1` was made by `github-actions[bot]` with both assets: H30's
   first real run, proven. Record: [overview.md](overview.md) → "Build / release flow".
+- **Later 2026-11-09 (owner: "review workspace for items needing this project's attention"):**
+  new rows C41 (loader-py) and H32 (the workspace's letter on CI-made release pages). This repo
+  is not on H32's change list (it counts here as having the setup), but checked against H32's
+  recipe the script differed in three places. Brought to the order in **`3eccba8`** (LOCAL, not
+  pushed): an in-script peel to the released commit, existing page = done with no write, the
+  nuget.org link + read-back + second peel, 30 s per request, and 13 mock-API tests inverted by
+  three mutants. Answer in ledger row H32; notes in row C40. **First real run: the next release.**
 
 ## Waiting on the owner
+
+- **Third-party code beside the release job's write token (H32 / C30), the owner's choice.**
+  H32's recipe says no package code runs beside `contents: write`. This repo's `release` job runs
+  `dotnet-script`, a third-party NuGet tool (pinned 2.0.1, and a NuGet version is immutable),
+  because the repo's scripts are `.csx`. The options:
+  (a) keep it, recorded as a deviation;
+  (b) run this one script with the SDK's own `dotnet run --file` and `#:property
+  UseAppHost=false`: first-party only, no `.exe`, but outside today's `.csx` rule;
+  (c) a Bun script with Bun installed by hand and pinned by sha256 (loader-c's way), outside
+  this repo's C# rule;
+  (d) let the job fetch the one script by `github.sha` and run it with `(b)`, no checkout
+  (loader-py's shape).
+  Recommendation: (b) or (d). They need no third-party code and no Bun.
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +

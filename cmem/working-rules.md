@@ -74,6 +74,14 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   write "blocked on gh". In workflows, GitHub's REST API with the job's `GITHUB_TOKEN`, from this
   repo's script mechanism: the `release` job runs `scripts/github-release.csx` (2026-11-09;
   [overview.md](overview.md) → "Build / release flow").
+- 🔒 **Every release gets its GitHub Release page made BY CI** (letter H32, owner 2026-11-09:
+  "the release page should be referred back to the workspace to insure that all projects have
+  this setup"; "only new tags will get release pages", so no backfill). Never by hand, never the
+  GitHub CLI. Here: `publish.yml`'s `release` job, `contents: write` only, after the nuget.org
+  push, running `scripts/github-release.csx` in H32's order: (1) the tag peels to the released
+  commit; (2) an existing page = done, no write; (3) POST with the nuget.org link on top + attach
+  + read back + peel again; a 30 s limit per request. A change to it lands under the gate before
+  a release, never during one.
 - **Bun versions (workspace Tooling rule 10, letter H31, owner 2026-11-09): record-only here.**
   This repo runs no Bun since 2026-11-08 (scripts are `.csx`; CI has no `setup-bun`), so it has
   no Bun pin to move. A dated measurement that names a Bun version stays as it was measured. If

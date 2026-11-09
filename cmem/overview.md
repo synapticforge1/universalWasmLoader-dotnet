@@ -285,7 +285,20 @@ a future add (not required for SPEC §7 conformance).
   missing token refused. **First real run: 0.2.1 (run 42638787863, 2026-11-09), all three jobs
   green**. The Release `v0.2.1` was made by `github-actions[bot]` with both assets (`.nupkg`
   37 805 B, `.snupkg` 24 804 B, state `uploaded`) and GitHub-generated notes; read back with the
-  public API. The re-run path is not exercised (nothing failed). Every `uses:` in both workflows
+  public API. The re-run path is not exercised (nothing failed).
+  **Brought to letter H32's order 2026-11-09 (`3eccba8`, after 0.2.1).** H32 (owner: every
+  project's release CI makes its page, only new tags get one) gives an exact order, and the
+  script differed from it in three places. Now: (1) the tag peels (annotated followed) to the
+  released commit, checked inside the script too (`github-release.csx -- <tag> <sha> <dir>`; the
+  workflow passes `github.sha`), else refuse with no write; (2) an existing page = done with NO
+  write (it used to upload missing assets to an existing page); (3) POST with
+  `generate_release_notes` and the nuget.org link on top, attach the packages, then read it back
+  (tag, not a draft, assets present) and peel the tag again. Every request has its own 30 s
+  limit, request to last byte. `selftest` runs the whole flow against a fake GitHub API (13
+  cases), inverted by three mutants (no sha check, no existing-page stop, no time limit), each
+  caught only by its own case(s). Read-only dry runs on the real API: `v0.2.1` at `62386be` →
+  exists, nothing to do; at `25a3d10` → refused; `v9.9.9` → refused. Its first real run is the
+  next release. Every `uses:` in both workflows
   is pinned to a commit hash (each checked to be a commit through the GitHub API).
   `workflow_dispatch` on a branch fails the tag check by design. No `concurrency:` (C30 (2)).
 - **0.2.0 (SPEC 4.0.0, .NET 10 only) on 2026-11-07** (owner: "yes release 0.2.0", then
