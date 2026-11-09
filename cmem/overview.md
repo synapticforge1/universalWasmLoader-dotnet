@@ -11,8 +11,8 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 - **Language / runtime:** C# on .NET, built on **Wasmtime** (NuGet `Wasmtime`, the Bytecode Alliance
   wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
 - **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published: 0.1.0
-  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0, net8.0 + net10.0; 0.2.0 (2026-11-08),
-  SPEC 4.0.0, net10.0 only.**
+  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0, net8.0 + net10.0; 0.2.0 (2026-11-08)
+  and 0.2.1 (2026-11-09), SPEC 4.0.0, net10.0 only.**
 
 ## Repository home — `synapticforge1` organization (recorded 2026-10-20)
 
@@ -282,7 +282,10 @@ a future add (not required for SPEC §7 conformance).
   so the tag check must stay the job's first step. Proven so far by `selftest` (8/8, also in
   `validate`) and dry runs against the real API: `v0.2.0` exists with both assets → nothing to
   do; `v9.9.9` → would create + upload both; one asset missing → only that one; a bad tag or a
-  missing token refused. **Its first real run is the next release.** Every `uses:` in both workflows
+  missing token refused. **First real run: 0.2.1 (run 42638787863, 2026-11-09), all three jobs
+  green**. The Release `v0.2.1` was made by `github-actions[bot]` with both assets (`.nupkg`
+  37 805 B, `.snupkg` 24 804 B, state `uploaded`) and GitHub-generated notes; read back with the
+  public API. The re-run path is not exercised (nothing failed). Every `uses:` in both workflows
   is pinned to a commit hash (each checked to be a commit through the GitHub API).
   `workflow_dispatch` on a branch fails the tag check by design. No `concurrency:` (C30 (2)).
 - **0.2.0 (SPEC 4.0.0, .NET 10 only) on 2026-11-07** (owner: "yes release 0.2.0", then
@@ -297,6 +300,16 @@ a future add (not required for SPEC §7 conformance).
   hash. Read back: nuget.org flat-container lists 0.1.0, 0.1.1, 0.2.0; the 0.2.0 nuspec names
   `net10.0` only, `Wasmtime` 44.0.0, repository commit `25a3d10`. The GitHub Release `v0.2.0` was
   created by the workflow, with the `.nupkg` and `.snupkg` attached.
+- ✅ **0.2.1 PUBLISHED 2026-11-09** (owner: "update the project memory files, commit, push then
+  release"). `compat.csx -- bump patch` at floor patch (surface unchanged; v0.2.0's tests 59/59
+  on the new code; only `<Version>` changed) → release commit `62386be` = tag `v0.2.1` =
+  `origin/main` (`ls-remote`); `compat.csx -- release` passed locally on the tagged HEAD, and
+  `validate` was green on its parent before the tag push. `publish.yml` run 42638787863: `checks`
+  / `publish` / `release` all `success`. Read back: the nuget.org flat-container listed 0.2.1
+  about 3½ minutes after the run (the nuspec: 0.2.1, `net10.0`, commit `62386be`); GitHub
+  Release `v0.2.1` by `github-actions[bot]`, both assets attached. The library is unchanged since
+  0.2.0: this release carried the H30 release path (REST API, no GitHub CLI), and its run is that
+  path's first real proof.
 - **Releasing goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `compat.csx -- bump <patch|minor|major>` (Bun `compat.ts` until 2026-11-08) sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, push both; `publish.yml` re-runs the gate on the tag

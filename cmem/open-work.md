@@ -5,9 +5,10 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Where things stand (2026-11-09)
 
-- **Released and green:** **0.2.0 on nuget.org** (SPEC 4.0.0, .NET 10 only; tag `v0.2.0` =
-  `25a3d10`), released by tag push through the three-job `publish.yml` (hash-pinned actions,
-  the OIDC credential in the `publish` job only). Scripts are `.csx` via the pinned local
+- **Released and green:** **0.2.1 on nuget.org** (2026-11-09; SPEC 4.0.0, .NET 10 only; tag
+  `v0.2.1` = `62386be`; 0.2.0 = `25a3d10` before it), released by tag push through the
+  three-job `publish.yml` (hash-pinned actions, the OIDC credential in the `publish` job only,
+  the GitHub Release made through the REST API). Scripts are `.csx` via the pinned local
   dotnet-script. **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
   `tests-net11-preview`, run 42500152048 green).
 - **Machine (owner's rules, [working-rules.md](working-rules.md)):** versions separated by
@@ -21,8 +22,8 @@ belong to the workspace session are listed only while not yet done there.
   there. (2) At each session start, re-read the ledger. (3) The owner's purge request (below).
 - **2026-11-09 (owner: "review workspace for items needing this project's attention"):** new
   rows H30, H31, C34 read. **H30: the `release` job no longer calls `gh`**; it runs
-  `scripts/github-release.csx` (REST API, `GITHUB_TOKEN`, re-runnable). Proven by selftest and
-  dry runs; **its first real run is the next release** (backlog below). H31 recorded (no Bun
+  `scripts/github-release.csx` (REST API, `GITHUB_TOKEN`, re-runnable). Proven by selftest, dry
+  runs and its **first real run, release 0.2.1** (below). H31 recorded (no Bun
   here). C34 recorded: NuGet's analogue of (1) is already covered, because `dotnet nuget push
   --skip-duplicate` makes a re-run after a post-upload failure succeed and reach `release`;
   (2)–(4) are JSR / npm / setup-deno / YAML-test only, so n/a. Found on the way: a local
@@ -33,15 +34,17 @@ belong to the workspace session are listed only while not yet done there.
   were pushed before the owner's explicit "push" (an error, reported). Then the owner said
   "update the project memory files, commit, push then release": `e31e994` (the H30 comments
   reworded, so the letter's check reads 0 hits) and the records were pushed with it.
-- **Releasing 0.2.1 (owner, 2026-11-09: "… then release"):** a patch through the gate (no API
-  change, SPEC unchanged). Its main purpose is the first real run of the H30 `release` job; the
-  result is recorded in "Build / release flow" ([overview.md](overview.md)).
+- **0.2.1 RELEASED (owner, 2026-11-09: "… then release"):** a patch through the gate (no API
+  change, SPEC unchanged; v0.2.0's tests 59/59). Tag `v0.2.1` = `62386be` = `origin/main`.
+  Publish run 42638787863 green in all three jobs. nuget.org lists 0.2.1 (nuspec commit
+  `62386be`), and GitHub Release `v0.2.1` was made by `github-actions[bot]` with both assets: H30's
+  first real run, proven. Record: [overview.md](overview.md) → "Build / release flow".
 
 ## Waiting on the owner
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
-  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` added 2026-11-08, also post-purge), no LFS; old commits still served by hash (e.g.
+  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` 2026-11-08 and `v0.2.1` 2026-11-09 added since, also post-purge), no LFS; old commits still served by hash (e.g.
   `f81cb55`, `f1623bd`). The request lists the 29 orphaned commits that were ever on GitHub (9
   before purge 1, 20 between the purges; full ids from the private bundles in the workspace's
   `cmem/local/backups/`) and gives `1588c76` / `0698e13` as the first changed commits (filter-branch
@@ -49,10 +52,9 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Backlog
 
-- **The next release proves the H30 change** (2026-11-09): the `release` job's first real run of
-  `scripts/github-release.csx`. Afterwards, read back the Release with the public API (`GET
-  /repos/{repo}/releases/tags/<tag>`: two assets). A re-run of the job must report "already
-  exists" / "already attached".
+- **Not yet exercised: the `release` job's RE-RUN path** (an existing Release kept, only missing
+  assets uploaded). 0.2.1's run had nothing to recover from. Dry runs show the logic; a real
+  re-run would show it on GitHub. No action needed unless a release fails part-way.
 
 - **Set up AHEAD of GA (2026-11-08, owner: "setup the .NET 11 tests using the RC3 installed"):**
   the test project adds `net11.0` only when built with SDK 11+. `_UwlSdkMajor` is derived from
