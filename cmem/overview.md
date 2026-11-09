@@ -12,7 +12,7 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
   wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
 - **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published: 0.1.0
   (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0, net8.0 + net10.0; 0.2.0 (2026-11-08),
-  0.2.1 and 0.2.2 (2026-11-09), SPEC 4.0.0, net10.0 only.**
+  0.2.1, 0.2.2 and 0.2.3 (2026-11-09), SPEC 4.0.0, net10.0 only.**
 
 ## Repository home — `synapticforge1` organization (recorded 2026-10-20)
 
@@ -343,6 +343,15 @@ a future add (not required for SPEC §7 conformance).
   GitHub Release `v0.2.2` was made by `github-actions[bot]`, with the nuget.org link on top of
   the generated notes and both assets (`uploaded`). That is the first real run of H32's full
   order and of the Bun release job. The library is unchanged since 0.2.0.
+- ✅ **0.2.3 PUBLISHED 2026-11-09** (owner: "update the project memory files, commit, push then
+  release"; asked whether to release when only memory notes had changed since v0.2.2: "Release
+  0.2.3 anyway"). Library, tests and workflows are identical to 0.2.2; only `<Version>` changed.
+  `bun scripts/compat.ts bump patch` at floor patch, v0.2.2's tests 59/59; release commit
+  `4468f69` = tag `v0.2.3` = `origin/main` (`ls-remote`); `release` gate passed on the tagged
+  HEAD; `validate` green on the parent `926b980` (run 42664796632) before the tag push.
+  `publish.yml` run **42665012482**: all three jobs `success`. Read back: nuget.org listed 0.2.3
+  about 3 minutes after the run (nuspec `net10.0`, commit `4468f69`); Release `v0.2.3` by
+  `github-actions[bot]`, nuget.org link on top, both assets `uploaded`.
 - **Releasing goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, push both; `publish.yml` re-runs the gate on the tag

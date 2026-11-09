@@ -5,8 +5,8 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Where things stand (2026-11-09)
 
-- **Released and green:** **0.2.2 on nuget.org** (2026-11-09; SPEC 4.0.0, .NET 10 only; tag
-  `v0.2.2` = `610b7f8`; 0.2.1 = `62386be`, 0.2.0 = `25a3d10` before it), released by tag push through the
+- **Released and green:** **0.2.3 on nuget.org** (2026-11-09; SPEC 4.0.0, .NET 10 only; tag
+  `v0.2.3` = `4468f69`, the same library as 0.2.2 = `610b7f8`; 0.2.1 = `62386be`, 0.2.0 = `25a3d10` before it), released by tag push through the
   three-job `publish.yml` (hash-pinned actions, the OIDC credential in the `publish` job only,
   the GitHub Release made through the REST API). Scripts are Bun TypeScript (`bun scripts/*.ts`;
   Bun pinned by sha256 in CI). **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
@@ -59,7 +59,7 @@ belong to the workspace session are listed only while not yet done there.
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
-  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` 2026-11-08, `v0.2.1` and `v0.2.2` 2026-11-09 added since, also post-purge), no LFS; old commits still served by hash (e.g.
+  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` 2026-11-08, `v0.2.1`, `v0.2.2` and `v0.2.3` 2026-11-09 added since, also post-purge), no LFS; old commits still served by hash (e.g.
   `f81cb55`, `f1623bd`). The request lists the 29 orphaned commits that were ever on GitHub (9
   before purge 1, 20 between the purges; full ids from the private bundles in the workspace's
   `cmem/local/backups/`) and gives `1588c76` / `0698e13` as the first changed commits (filter-branch
@@ -128,7 +128,7 @@ the same day: user `MSBuildSDKsPath` removed, so the versions stay separated by 
     keeps a multi-recipient row open while any recipient is. Their creators (loader-js, S3D,
     the workspace) close them. **H29: CLOSED by the workspace 2026-11-08** (every port answered;
     re-read 2026-11-09). C29 and C30 are still open.
-  - **Open on this repo's side of the ledger (2026-11-09):** C42 (scripts back on Bun; the
+  - **Open on this repo's side of the ledger (2026-11-09):** C42 CLOSED by this repo (its creator) after the workspace verified it and updated its Tooling table; (it was: scripts back on Bun; the
     workspace's Tooling row to update) and the H30 / H31 / H32 / C34 cells, all awaiting the
     workspace's or the creators' read.
   - Older rows answered here (`3e58efc`, 2026-10-26) and still open on the creator's side: H6,
