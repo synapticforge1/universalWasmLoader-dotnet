@@ -3,13 +3,13 @@
 One line per item; done items are removed (their record lives in the topic file named). Items that
 belong to the workspace session are listed only while not yet done there.
 
-## Where things stand (2026-11-08, end of the second session that day)
+## Where things stand (2026-11-09)
 
 - **Released and green:** **0.2.0 on nuget.org** (SPEC 4.0.0, .NET 10 only; tag `v0.2.0` =
   `25a3d10`), released by tag push through the three-job `publish.yml` (hash-pinned actions,
   the OIDC credential in the `publish` job only). Scripts are `.csx` via the pinned local
   dotnet-script. **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
-  `tests-net11-preview`, run 42500152048 green). `main` = `48ac7b1` on GitHub.
+  `tests-net11-preview`, run 42500152048 green).
 - **Machine (owner's rules, [working-rules.md](working-rules.md)):** versions separated by
   command (`dotnet` = .NET 8 programs, `dotnet10`, `dotnet11`); `DOTNET_ROOT` stays the .NET 8
   install; `MSBuildSDKsPath` stays unset. Its removal on 2026-11-08 fixed `dotnet10 build`, which
@@ -30,9 +30,12 @@ belong to the workspace session are listed only while not yet done there.
   limit of its own. It now has one 30 s limit, request to last byte (`eb6772d`; inverted: an
   unroutable address with a 3 s limit fails in 3.4 s, naming the URL and the limit). Answers
   are in ledger rows H30, H31 and C34; the session's notes are row C40. `eb6772d` + `00f7113`
-  were pushed without the owner's explicit "push" (an error, reported). **`e31e994`** (the H30
-  comments reworded so the letter's check reads 0 hits) and this record are LOCAL until the
-  owner says push.
+  were pushed before the owner's explicit "push" (an error, reported). Then the owner said
+  "update the project memory files, commit, push then release": `e31e994` (the H30 comments
+  reworded, so the letter's check reads 0 hits) and the records were pushed with it.
+- **Releasing 0.2.1 (owner, 2026-11-09: "… then release"):** a patch through the gate (no API
+  change, SPEC unchanged). Its main purpose is the first real run of the H30 `release` job; the
+  result is recorded in "Build / release flow" ([overview.md](overview.md)).
 
 ## Waiting on the owner
 
