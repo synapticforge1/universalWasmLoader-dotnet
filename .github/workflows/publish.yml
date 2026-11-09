@@ -12,7 +12,8 @@ name: Publish to NuGet
 # from NuGet packages, the PublicAPI analyzer) with a read-only token and NO id-token, and hands
 # the packed files on as an artifact. `publish` is the only job with `id-token: write`; it runs no
 # package code: it checks the tag, downloads the artifact, logs in and pushes. `release` (only
-# `contents: write`, after a successful push) creates the GitHub Release with the packages attached.
+# `contents: write`, after a successful push) creates the GitHub Release with the packages attached,
+# through GitHub's REST API (`scripts/github-release.csx`; no `gh`, workspace letter H30).
 # Every `uses:` is pinned to a commit hash (the tag it was resolved from is in the comment).
 # No `concurrency:` on purpose (workspace C30 (2)): a cancelled run could stop after the push to
 # nuget.org and before the Release; every job re-checks the tag instead.
@@ -138,9 +139,11 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # only for `gh release create`
+      contents: write   # only for creating the Release and attaching its assets
 
     steps:
+      # Must stay FIRST: the REST API would create a missing tag at the default branch (`gh`'s
+      # --verify-tag refused that), so nothing runs unless the tag exists at this run's commit.
       - name: The tag still points at this commit
         env:
           TAG: ${{ github.ref_name }}
@@ -151,16 +154,32 @@ jobs:
           got="$(git ls-remote "https://github.com/$REPO" "refs/tags/$TAG" "refs/tags/$TAG^{}" | tail -n 1 | cut -f 1)"
           test "$got" = "$SHA" || { echo "::error::tag $TAG is at '$got', not $SHA"; exit 1; }
 
+      # The tagged commit's scripts/github-release.csx and dotnet-tools.json; no credentials kept.
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 10.0.x
+
+      # dotnet-script 2.0.1, pinned in dotnet-tools.json (a NuGet version is immutable). The script
+      # itself references no packages: GitHub's REST API through the .NET base library only.
+      - name: Restore the script runner
+        run: dotnet tool restore
+
       - name: Download the package
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: nupkg
           path: out
 
-      # `gh` is preinstalled on the runner; --verify-tag refuses to create a tag that is not there.
+      # No `gh` (workspace letter H30, owner 2026-11-08). Re-runnable: an existing Release is kept
+      # and only missing assets are uploaded.
       - name: Create the GitHub Release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-          REPO: ${{ github.repository }}
-        run: gh release create "$TAG" out/* --repo "$REPO" --title "$TAG" --generate-notes --verify-tag
+        run: dotnet tool run dotnet-script scripts/github-release.csx -- "$TAG" out

@@ -33,6 +33,7 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using YamlDotNet.RepresentationModel;
 
 static string ScriptDir([CallerFilePath] string path = "") => Path.GetDirectoryName(path)!;
@@ -41,6 +42,9 @@ const string INDEX = "https://dotnetcli.blob.core.windows.net/dotnet/release-met
 static readonly string ROOT = Path.GetFullPath(Path.Combine(ScriptDir(), ".."));
 const string TEST_PROJECT = "tests/UniversalWasmLoader.Tests.csproj";
 const string WORKFLOWS = ".github/workflows";
+
+/// The time limit for fetching Microsoft's index, request to last byte.
+const int FETCH_SECONDS = 30;
 
 /// A supported line this close to its end of support is "leaving": reported, not required.
 const int LEAVING_DAYS = 30;
@@ -162,10 +166,22 @@ static (List<string> Problems, List<string> Notes) Verdict(List<Line> supported,
 
 static async Task<int> Check()
 {
-    using var http = new HttpClient();
-    using var res = await http.GetAsync(INDEX);
-    if (!res.IsSuccessStatusCode) throw new Exception($"HTTP {(int)res.StatusCode} for {INDEX}");
-    var index = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement.GetProperty("releases-index");
+    // One time limit for the whole fetch, request to last byte (a stalled fetch once held a local
+    // run for over 15 minutes, 2026-11-09; in CI it would hold the runner): fail loudly instead.
+    using var http = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+    using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(FETCH_SECONDS));
+    string body;
+    try
+    {
+        using var res = await http.GetAsync(INDEX, limit.Token);
+        if (!res.IsSuccessStatusCode) throw new Exception($"HTTP {(int)res.StatusCode} for {INDEX}");
+        body = await res.Content.ReadAsStringAsync(limit.Token);
+    }
+    catch (OperationCanceledException) when (limit.IsCancellationRequested)
+    {
+        throw new Exception($"no complete response from {INDEX} within {FETCH_SECONDS} s");
+    }
+    var index = JsonDocument.Parse(body).RootElement.GetProperty("releases-index");
     string? Str(JsonElement e, string key) => e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     var channels = index.EnumerateArray()
         .Select(c => new Channel(Str(c, "channel-version") ?? "", Str(c, "release-type") ?? "", Str(c, "support-phase") ?? "", Str(c, "eol-date")))

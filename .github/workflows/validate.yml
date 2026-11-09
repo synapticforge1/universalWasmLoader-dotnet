@@ -46,6 +46,10 @@ jobs:
       - name: PublicAPI files match the code
         run: dotnet tool run dotnet-script scripts/compat.csx -- surface --check
 
+      # The release job's REST client (no `gh`, workspace letter H30): its pure parts on every push.
+      - name: GitHub Release script self-test
+        run: dotnet tool run dotnet-script scripts/github-release.csx -- selftest
+
   # .NET 11 ahead of its GA (owner, 2026-11-08: "setup the .NET 11 tests using the RC3
   # installed"). Its own job, so nothing else ever runs on a preview SDK. With SDK 11 present the
   # test project adds net11.0, and `dotnet test` runs net10.0 AND net11.0. At 11's GA the
