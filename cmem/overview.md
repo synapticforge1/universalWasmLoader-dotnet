@@ -48,9 +48,9 @@ committed file: the workspace's `cmem/local/environment.md`. Checked 2026-10-22:
 → 10.0.402; 10.0.403 on 2026-11-07. Since 2026-11-08 there is also **`dotnet11`** (the .NET 11
 SDK, 11.0.100-rc.3 that day) for .NET 11 work. **`DOTNET_ROOT` stays the .NET 8 system install**
 (owner, 2026-11-08); neither command needs it ([working-rules.md](working-rules.md)). Build, test
-and pack go through `dotnet10`; committed scripts are C# scripts run by the
-pinned local dotnet-script (`dotnet10 tool run dotnet-script scripts/<name>.csx`, since
-2026-11-08; Bun before; [working-rules.md](working-rules.md)). Library and test
+and pack go through `dotnet10`; committed scripts are Bun TypeScript (`bun scripts/<name>.ts`;
+`.csx` via dotnet-script 2026-11-08 → 2026-11-09, then Bun again, owner;
+[working-rules.md](working-rules.md)). CI installs Bun by hand, pinned by sha256. Library and test
 project target **net10.0** only, from 0.2.0 (owner, 2026-11-07; 0.1.x was net8.0;net10.0). See
 "Tests" for the rule that decides which lines must be tested.
 
@@ -139,7 +139,7 @@ a future add (not required for SPEC §7 conformance).
   `net10.0`, CI installs 10.0.x only (the packed 0.2.0 holds `lib/net10.0` only, `Wasmtime` the
   one dependency). .NET 8 / 9 consumers stay on 0.1.1; README Breaking Changes row item (5).
 - **Every required .NET line is tested** (the owner's "like the -js version" question, same day).
-  **`scripts/runtimes.csx`** (`runtimes.ts` until 2026-11-08; modelled on -js's `check-lts.ts`) reads
+  **`scripts/runtimes.ts`** (Bun; `.csx` 2026-11-08 → 2026-11-09; modelled on -js's `check-lts.ts`) reads
   Microsoft's `releases-index.json`. A line is SUPPORTED when its phase is `active` /
   `maintenance` and its EOL has not passed, and REQUIRED unless it is within 30 days of its EOL
   ("leaving", reported as a note). Each required line must be a test-project target AND installed
@@ -150,8 +150,8 @@ a future add (not required for SPEC §7 conformance).
   SDK 10 cannot build `net11.0`; locally use `dotnet11` (installed 2026-11-08). **Already tested
   on the RC since 2026-11-08:** `net11.0` is added when the build runs on SDK 11+, and CI's
   `tests-net11-preview` job runs it; 59/59 on 11.0 rc.3 ([open-work.md](open-work.md) has the
-  details and the GA steps). `runtimes.csx -- selftest`: 24
-  pure checks. Inverted twice: on the tree before the matrix it failed naming the three gaps;
+  details and the GA steps). `runtimes.ts selftest`: 27
+  pure checks (24 before the .NET 11 checks of 2026-11-08). Inverted twice: on the tree before the matrix it failed naming the three gaps;
   `checks` lacking 9.0.x while tests targeted 9 is the per-job case, now a selftest.
 - **Before the move, 59/59 also ran on net8.0 and net9.0** (2026-11-08, `4b7b773`, CI run
   42440580340 too). The machine has only the .NET 10 runtime, so the local 8 / 9 runs used
@@ -193,7 +193,7 @@ a future add (not required for SPEC §7 conformance).
     `describe`'s abbreviation length depends on the clone (loader-dart's finding, C15). All 12
     fixture files byte-identical to -js (`cmp`), `bun scripts/fixtures.ts` 12/12, `dotnet10 test
     tests` 9/9.
-  - **Hash check: `scripts/fixtures.csx`** (`fixtures.ts` 2026-10-22 → 2026-11-08; same rule as -js
+  - **Hash check: `scripts/fixtures.ts`** (Bun since 2026-10-22, `.csx` 2026-11-08 → 2026-11-09; same rule as -js
     `scripts/check-fixtures.ts`): every stamped file present and sha256-identical, no unstamped
     `.wasm`/`.wit`/`.wat` in `tests/`. Runs in CI `validate.yml`. Inverted on a copy (one flipped
     byte, a stray `.wit`, a missing `.wat` → exit 1 naming all three); `tests/` passes, 12 files.
@@ -262,7 +262,7 @@ a future add (not required for SPEC §7 conformance).
   (2026-10-22) matched no new run: still run 39821337557. **Applies to every repo moved to the org
   that publishes through a trusted-publishing policy** (cf. -js, -c, -dart registries).
 - **A release is a TAG PUSH since 2026-11-07** (owner: "option 2", the loader-dart shape). The
-  flow: `dotnet10 tool run dotnet-script scripts/compat.csx -- bump <kind>`, commit, `git tag vX.Y.Z`, push the commit and the
+  flow: `bun scripts/compat.ts bump <kind>`, commit, `git tag vX.Y.Z`, push the commit and the
   tag. Pushing the tag runs `publish.yml`, which publishes to nuget.org and then creates the
   GitHub Release itself. Before this, the workflow ran on a published GitHub Release, so pushing
   `v0.2.0` alone published nothing; the Release page was an owner item on the web UI.
@@ -332,7 +332,7 @@ a future add (not required for SPEC §7 conformance).
   0.2.0: this release carried the H30 release path (REST API, no GitHub CLI), and its run is that
   path's first real proof.
 - **Releasing goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
-  2026-10-22): `compat.csx -- bump <patch|minor|major>` (Bun `compat.ts` until 2026-11-08) sets `<Version>` (refusing below the
+  2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, push both; `publish.yml` re-runs the gate on the tag
   (blocking) before packing. nuget.org rejects re-pushing an existing version.
 - **Licensing:** package license is **MIT** (`<PackageLicenseExpression>MIT</PackageLicenseExpression>`),
@@ -401,7 +401,7 @@ a future add (not required for SPEC §7 conformance).
   row's creator closes it. The pointer had cited the pre-purge `0698e13` for the archive until the
   same day.
 - **Repo rules (2026-10-22):** LF line endings enforced by `.gitattributes` + `.editorconfig`; committed
-  repeated-use scripts were TypeScript run by Bun, C# `.csx` via dotnet-script since 2026-11-08 (C# file-based apps build an executable, which the
+  repeated-use scripts are TypeScript run by Bun (`.csx` via dotnet-script 2026-11-08 → 2026-11-09) (C# file-based apps build an executable, which the
   workspace rule excludes); one-time scratchpad scripts may be any language; no secrets or personal
   information. Details in [working-rules.md](working-rules.md); method rules in
   [best-practices.md](best-practices.md).

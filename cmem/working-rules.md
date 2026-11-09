@@ -2,101 +2,85 @@
 
 Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still applies underneath.
 
-## Committed scripts are C# scripts run by dotnet-script (owner, 2026-11-08)
+## Committed scripts are Bun TypeScript (owner, 2026-11-09)
 
-- 🔒 **The rule (owner, 2026-11-08: "yes. move them"):** committed scripts are `scripts/*.csx`,
-  run by **dotnet-script 2.0.1, pinned as a LOCAL tool in `dotnet-tools.json`** (repo root,
-  `rollForward: false`). Run them as **`dotnet10 tool run dotnet-script scripts/<name>.csx
-  [-- args]`**. Once per clone, run `dotnet10 tool restore`. CI does the same with the runner's
-  `dotnet` (`dotnet tool restore`, then `dotnet tool run dotnet-script …`), in the token-less
-  jobs only. Today's scripts: `fixtures.csx`, `runtimes.csx` (uses `#r "nuget: YamlDotNet,
-  18.1.0"`, MIT, pinned), `compat.csx`.
-- **Why it fits workspace Tooling rule 1** ("no mechanism that BUILDS AN EXECUTABLE"): measured
-  2026-11-08 on SDK 10.0.403. dotnet-script compiles a script to ONE cached `.dll` under
-  `%TEMP%\dotnet-script\<the script's path mirrored>\` and runs it inside the tool's own
-  process; no `.exe` is built per script. Its restore takes ~13 s on the first run; later runs
-  of an unchanged script take ~1 s. By contrast, `dotnet10 run --file x.cs` builds `x.exe` (an
-  apphost) and runs as it; only with `#:property UseAppHost=false` would it build a `.dll`
-  alone. That route was not taken. `dotnet10 repl` is not an SDK command (it would be the
-  separately installed `dotnet-repl`). The workspace table's row changes from "C# → Bun" to "C#
-  → `.csx` via dotnet-script" (the workspace session's file, reported in ledger row C32).
-- 🔒 **Never the bare shim `dotnet-script <file>`** (owner, 2026-11-08: it "is throwing errors
-  in the terminal when used"). **And not the GLOBAL form `dotnet10 script <file>` either, from a
-  directory on `D:`** (measured 2026-11-08). From a `D:` working directory, the SDK hands a
-  global tool to the bare `dotnet-script.exe` shim (`Environment.ProcessPath` =
-  `~\.dotnet\tools\dotnet-script.exe`). From the scratchpad on `C:`, it hosts the tool in its own
-  `dotnet.exe`. dotnet-script then restores with a plain `dotnet restore … -r win10-x64`,
-  resolved like any child process. From the shim, that finds the SDK-less system `dotnet` first
-  on PATH, and the restore fails ("Unable to restore packages"). With the SDK first on PATH it
-  passes, since the generated project's `UseRidGraph=true` makes `win10-x64` valid. This is the
-  owner's bare-shim error, and very likely the 2026-10-22 failure too. A LOCAL tool always runs
-  inside the SDK's `dotnet.exe`, from any directory, so its restore finds the SDK. (The
-  2026-10-22 MAX_PATH overflow was for a scratchpad-path script; the repo's longest cache path
-  is well under the limit.)
-- **The port (2026-11-08), under the workspace port rule** (a port replaces its original only
-  after an output diff proves them equivalent). Each `.csx` reproduces its `.ts` line for line,
-  checked by running both on the same inputs (one-time harness, deleted):
-  - `fixtures`: the real `tests/`, an explicit dir, a broken copy (a flipped byte, a stray
-    `.wit`, a missing `.wat`); identical output and exit code. A dir without `fixtures.json`
-    crashes both (exit 1, an unhandled error naming the file; stack text differs by runtime).
-  - `runtimes`: `selftest`, the live check, and two failure mutants applied to both (tests
-    `net9.0` only + `validate.yml` 9.0.x; `LEAVING_DAYS` 31): identical.
-  - `compat`: `selftest` / `surface --check` / `report` in the repo. Then two throwaway clones
-    (one Bun, one `.csx`, the same steps): bump refused on a dirty tree, release on an untagged
-    HEAD, an allowed `bump patch` (the resulting `git diff` identical), `release v0.2.1`, a stale
-    surface (`surface --check` and `report`), red previous-tag tests (`report`, `bump patch`
-    REFUSED), an unknown command. Every verdict, exit code and diff is identical. The only text
-    differences are random temp-folder names and xUnit's elapsed-time stamp in the red-test tail.
-  - The usage lines name their own file (`compat.csx`, `runtimes.csx`): intended.
-  - Port details that matter: an insertion-ordered set where the Bun code relied on JS `Set`
-    order; `StringComparer.Ordinal` for JS's default sort; `[0-9]` for `\d` (.NET's `\d` is any
-    Unicode digit); UTF-8 console output (`→`, `⚠️`); child output = all stdout then all stderr,
-    as `Bun.spawnSync` gave it; `#nullable enable` in every script (dotnet-script compiles with
-    annotations off).
+- 🔒 **The rule (owner, 2026-11-09: "move the other scripts to bun", after "use bun instead of
+  dotnet script to release"):** committed scripts are `scripts/*.ts`, run by **Bun**:
+  `bun scripts/<name>.ts [args]`. Today: `fixtures.ts`, `runtimes.ts`, `compat.ts` (the gate),
+  `github-release.ts` (the release page). They import only `node:*` and use `Bun.*` (e.g.
+  `Bun.YAML`, `Bun.which`, `Bun.spawnSync`); no package dependencies, no `package.json`. In CI,
+  Bun is **installed by hand, pinned by version + sha256** (`BUN_VERSION` / `BUN_SHA256` in both
+  workflows' `env`, move them together; no `setup-bun` action). The version is the latest
+  installed Bun (workspace Tooling rule 10, letter H31): 1.4.4, whose `bun-linux-x64.zip` sha256
+  `bf8ccbfb…395c` was re-derived 2026-11-09 from Bun's `SHASUMS256.txt` and by hashing the zip.
+  Workspace Tooling rule 1: C# repos use Bun (the table's C# row, as before 2026-11-08).
+- **Why (2026-11-09):** one runtime instead of .NET + dotnet-script + Bun; no ~13 s first-run
+  compile and restore; no dotnet-script `D:`-directory pitfall (below); `Bun.YAML` replaces the
+  YamlDotNet package; and no third-party package code beside the release job's write token (H32's
+  recipe, C30), the reason the release script moved first.
+- **The port back (2026-11-09), under the workspace port rule** (a port replaces its original
+  only after an output diff proves them equal). `fixtures.ts` and `compat.ts` were restored from
+  `703e452^`, the Bun originals; their `.csx` were never changed after the 2026-11-08 port that
+  proved them equal. `runtimes.ts` is that original plus the two later `.csx` changes (`b3941b2`:
+  every `<TargetFrameworks>` element, "ahead of its GA" notes; `eb6772d`: the 30 s fetch limit).
+  The `.ts` and `.csx` then ran on the same inputs (one-time harnesses, deleted). fixtures on
+  `tests/`, an explicit dir and a broken copy; runtimes selftest (27/27) and the live check; compat
+  selftest, `surface --check` and `report`: all identical. Two throwaway clones (one per version)
+  ran nine gate cases: a dirty-tree refusal, an untagged release, an allowed `bump patch`,
+  release, a stale surface ×2, red previous tests ×2, an unknown command. Every verdict, exit
+  code and `git diff` was identical; the only differing text was the random temp-folder name and
+  xUnit's elapsed time in the printed test tail, each line checked. The usage lines name their
+  own file. The `runtimes.ts` fetch limit was inverted: an unroutable address with a 3 s limit
+  fails after 3 s, naming both. The release page script's own port proof is in
+  [overview.md](overview.md) → "Build / release flow".
 - **History:** 2026-10-22 "language first" (C# file-based apps) → "committed scripts only" →
   "no mechanism that builds an executable" (C# → Bun): the gate was written as
   `scripts/compat.cs` (`51c447f`, never pushed), then ported to `compat.ts` (`0874746`). On
-  2026-10-22 dotnet-script 2.0.1 failed here (`NETSDK1083` on `-r win10-x64`, and MAX_PATH), so
-  Bun stayed. On 2026-11-08 the owner re-asked and kept Bun "for now" ("the scripting is still
-  not working yet"), then corrected it ("it does work"), and said "move them". Workspace P6 in
-  `../../cmem/divergences.md`.
+  2026-11-08 the scripts moved to `.csx` via dotnet-script (owner: "move them", `703e452`),
+  pinned as a local tool. **dotnet-script facts, kept in case it is ever reconsidered:**
+  - It builds no `.exe`: one cached `.dll`, run in the tool's process.
+  - Never the bare shim `dotnet-script <file>`: the owner saw it throw errors.
+  - From a `D:` directory, the GLOBAL `dotnet10 script` also runs the bare shim. Its internal
+    `dotnet restore` then finds the SDK-less system `dotnet` and fails, the likely cause of the
+    2026-10-22 failure.
+  - A repo-local tool always runs inside the SDK.
+
+  On 2026-11-09 the release script moved to Bun (`75f8dd1`), then the rest (`e047771`), and
+  `dotnet-tools.json` was removed. Workspace P6 in `../../cmem/divergences.md`.
 - **Scope:** the rule governs COMMITTED scripts kept for repeated use (what would otherwise be a
   `.ps1`/`.sh`/`.cmd`). Product code and the test suite are not scripts; project tasks stay plain
   `dotnet10 build` / `dotnet10 test tests` / `dotnet10 pack`. **A one-time script deleted after use
   may be PowerShell, bash, Bun or anything else that fits**, in the session scratchpad, still
-  WRITTEN with `Write` (never a heredoc); ported to `.csx` before it is committed.
-- **No committed shell scripts.** CI YAML `run:` steps only launch commands.
+  WRITTEN with `Write` (never a heredoc); ported to Bun before it is committed.
+- **No committed shell scripts.** CI YAML `run:` steps only launch commands (the pinned Bun
+  install is the one multi-line step, the same in every job that needs Bun).
 - 🔒 **No `gh`, in CI too** (workspace Tooling rule 9, letter H30; owner, 2026-11-08: "it has been
   found to be more complicated to use than it is worth", "yes change those"). Check the repo
   instead: `git ls-remote origin`, `git fetch`, the repo's files, a registry's public API
   (nuget.org's flat-container), GitHub's public REST API for public data. A task only GitHub's
   web UI can do (a Release page by hand, run logs, a Support request) is an OWNER item. Never
-  write "blocked on gh". In workflows, GitHub's REST API with the job's `GITHUB_TOKEN`, from this
-  repo's script mechanism: the `release` job runs `scripts/github-release.csx` (2026-11-09;
-  [overview.md](overview.md) → "Build / release flow").
-- 🔒 **One exception to the `.csx` rule: the release page script is Bun TypeScript** (owner,
-  2026-11-09: "use bun instead of dotnet script to release"), so the `release` job, which holds
-  `contents: write`, runs no third-party package code (H32's recipe, C30). Bun is installed by
-  hand there, pinned by version + sha256; the version is the latest installed Bun (workspace
-  Tooling rule 10 / H31). Every other committed script stays `.csx`.
+  write "blocked on gh". In workflows, GitHub's REST API with the job's `GITHUB_TOKEN`: the
+  `release` job runs `scripts/github-release.ts` ([overview.md](overview.md) → "Build / release
+  flow").
 - 🔒 **Every release gets its GitHub Release page made BY CI** (letter H32, owner 2026-11-09:
   "the release page should be referred back to the workspace to insure that all projects have
   this setup"; "only new tags will get release pages", so no backfill). Never by hand, never the
   GitHub CLI. Here: `publish.yml`'s `release` job, `contents: write` only, after the nuget.org
-  push, running `scripts/github-release.csx` in H32's order: (1) the tag peels to the released
+  push, running `scripts/github-release.ts` in H32's order: (1) the tag peels to the released
   commit; (2) an existing page = done, no write; (3) POST with the nuget.org link on top + attach
-  + read back + peel again; a 30 s limit per request. A change to it lands under the gate before
-  a release, never during one.
-- **Bun versions (workspace Tooling rule 10, letter H31, owner 2026-11-09): record-only here.**
-  This repo runs no Bun since 2026-11-08 (scripts are `.csx`; CI has no `setup-bun`), so it has
-  no Bun pin to move. A dated measurement that names a Bun version stays as it was measured. If
-  Bun ever returns, every notation is the latest installed Bun.
-- **`.csx` needs no csproj exclusion:** the SDK compiles only `.cs`.
+  + read back + peel again; a 30 s limit per request. That job checks out only the script
+  (sparse, no credentials) and installs only pinned Bun: no third-party package code beside the
+  write token. A change to it lands under the gate before a release, never during one.
+- **Bun versions (workspace Tooling rule 10, letter H31):** every Bun notation here is the latest
+  installed Bun (1.4.4 on 2026-11-09). Move `BUN_VERSION` and `BUN_SHA256` together in both
+  workflows, re-deriving the sha256 from Bun's `SHASUMS256.txt` and by hashing the zip. A dated
+  measurement that names a Bun version stays as it was measured.
+- **`scripts/` needs no csproj exclusion:** the SDK compiles only `.cs`.
 - **Use `dotnet10`, never bare `dotnet`** (owner, 2026-10-22; reason restated by the owner
   2026-11-08): on the development machine bare `dotnet` is .NET 8, kept because installed
   programs depend on that version, and `dotnet10` is .NET 10. This repo is .NET 10 only from
   0.2.0. Never change what bare `dotnet` points at. See [overview.md](overview.md) → "Toolchain".
-  `compat.csx` picks `$UWL_DOTNET`, else `dotnet10` when on PATH, else `dotnet` (CI).
+  `compat.ts` picks `$UWL_DOTNET`, else `dotnet10` when on PATH, else `dotnet` (CI).
 - **`dotnet11` is the .NET 11 SDK** on the development machine (added 2026-11-08 at the owner's
   request, the same kind of command as `dotnet10`; 11.0.100-rc.3 that day). Use it only for
   .NET 11 work (the `net11.0` test target at GA: [open-work.md](open-work.md)); the repo's
@@ -104,8 +88,8 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
 - 🔒 **`DOTNET_ROOT` stays the .NET 8 system install** (owner, 2026-11-08: "I have to keep the
   dotnet root as dotnet 8 for installed programs that are not yet compatible with dotnet 10").
   Never change it, and never set it for this repo's work. `dotnet10` / `dotnet11` find their own
-  SDKs without it. With it on the .NET 8 install, this repo's build, 59/59 tests and `dotnet10
-  tool run dotnet-script` all pass (2026-11-08). Scoop's .NET SDK installs have overwritten it
+  SDKs without it. With it on the .NET 8 install, this repo's build, 59/59 tests and the
+  scripts all pass (2026-11-08). Scoop's .NET SDK installs have overwritten it
   (twice); the machine notes say how to check and restore it (the workspace's
   `cmem/local/environment.md`).
 - 🔒 **The .NET versions stay separated by COMMAND, and `MSBuildSDKsPath` stays unset** (owner,

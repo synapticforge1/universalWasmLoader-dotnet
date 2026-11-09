@@ -8,8 +8,8 @@ belong to the workspace session are listed only while not yet done there.
 - **Released and green:** **0.2.1 on nuget.org** (2026-11-09; SPEC 4.0.0, .NET 10 only; tag
   `v0.2.1` = `62386be`; 0.2.0 = `25a3d10` before it), released by tag push through the
   three-job `publish.yml` (hash-pinned actions, the OIDC credential in the `publish` job only,
-  the GitHub Release made through the REST API). Scripts are `.csx` via the pinned local
-  dotnet-script. **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
+  the GitHub Release made through the REST API). Scripts are Bun TypeScript (`bun scripts/*.ts`;
+  Bun pinned by sha256 in CI). **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
   `tests-net11-preview`, run 42500152048 green).
 - **Machine (owner's rules, [working-rules.md](working-rules.md)):** versions separated by
   command (`dotnet` = .NET 8 programs, `dotnet10`, `dotnet11`); `DOTNET_ROOT` stays the .NET 8
@@ -46,30 +46,16 @@ belong to the workspace session are listed only while not yet done there.
   pushed): an in-script peel to the released commit, existing page = done with no write, the
   nuget.org link + read-back + second peel, 30 s per request, and 13 mock-API tests inverted by
   three mutants. Answer in ledger row H32; notes in row C40. **First real run: the next release.**
+- **ALL SCRIPTS ON BUN (2026-11-09).** First the release page script (owner: "use bun instead of
+  dotnet script to release", answering the question whether third-party code may run beside the
+  release job's write token: options (a) keep `dotnet-script`, (b)/(d) `dotnet run --file`, (c)
+  Bun pinned by sha256 → (c)). `75f8dd1`, port proven (selftest, three real dry runs, five
+  refusals; the same three mutants caught). Then the rest (owner: "move the other scripts to
+  bun"): `e047771`, port proven ([working-rules.md](working-rules.md) → "Committed scripts").
+  `dotnet-tools.json` removed; CI installs Bun by hand, pinned by sha256, in every job that needs
+  it. Next: the release (0.2.2) that is the first real run of the Bun release job.
 
 ## Waiting on the owner
-
-- **Third-party code beside the release job's write token (H32 / C30), the owner's choice.**
-  H32's recipe says no package code runs beside `contents: write`. This repo's `release` job runs
-  `dotnet-script`, a third-party NuGet tool (pinned 2.0.1, and a NuGet version is immutable),
-  because the repo's scripts are `.csx`. The options:
-  (a) keep it, recorded as a deviation;
-  (b) run this one script with the SDK's own `dotnet run --file` and `#:property
-  UseAppHost=false`: first-party only, no `.exe`, but outside today's `.csx` rule;
-  (c) a Bun script with Bun installed by hand and pinned by sha256 (loader-c's way), outside
-  this repo's C# rule;
-  (d) let the job fetch the one script by `github.sha` and run it with `(b)`, no checkout
-  (loader-py's shape).
-  Recommendation: (b) or (d). They need no third-party code and no Bun.
-  **DECIDED, owner 2026-11-09: (c), "use bun instead of dotnet script to release".** The release
-  page script becomes Bun TypeScript (`scripts/github-release.ts`). The `release` job installs
-  Bun by hand, pinned by version + sha256 (no `uses:` for it, no `dotnet-script`, no NuGet
-  restore beside the write token), as loader-c does. It ports `github-release.csx` under the
-  workspace port rule (an output diff before the `.csx` goes). **DONE in `75f8dd1` (local):**
-  the port proven equal (selftest, three real dry runs, five refusals; only the usage line
-  differs, naming its file), the same three mutants caught on the `.ts`, the pinned install
-  rehearsed (a wrong pin exits 1), the `.csx` removed. **Its first real run is the next
-  release.** [overview.md](overview.md) → "Build / release flow".
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
@@ -95,16 +81,16 @@ belong to the workspace session are listed only while not yet done there.
   59/59; `dotnet10` Release build 0 warnings. Locally, run each line with its own command:
   `dotnet11 test tests` cannot run `net10.0` (the preview install has only the 11 runtime, and
   the test host uses the SDK's own install), which is correct separation, not a fault.
-  `runtimes.csx` now reads every `<TargetFrameworks>` element (conditional ones too) and
+  `runtimes.ts` (then `.csx`) reads every `<TargetFrameworks>` element (conditional ones too) and
   reports a go-live / preview target as "ahead of its GA" (selftest 24 → 27). **At GA:** make
   `net11.0` unconditional, put `11.0.x` (GA quality) into the main job and `publish.yml`'s
   `checks`, drop the preview job, then build tests with `dotnet11`.
-- **.NET 11 GA (expected mid-November 2026):** `scripts/runtimes.csx` then fails in CI, and
+- **.NET 11 GA (expected mid-November 2026):** `scripts/runtimes.ts` then fails in CI, and
   BLOCKS releases, until `net11.0` is a test target and `11.0.x` is installed in both workflows'
   test jobs. `dotnet10` cannot build `net11.0`; the .NET 11 SDK is installed here as
   **`dotnet11`** (11.0.100-rc.3 on 2026-11-08; update it to the GA SDK first). Once
   `net11.0` is a target, the local commands that build the tests need the 11 SDK:
-  `dotnet11 build tests` / `dotnet11 test tests`, and `UWL_DOTNET=dotnet11` for `compat.csx`,
+  `dotnet11 build tests` / `dotnet11 test tests`, and `UWL_DOTNET=dotnet11` for `compat.ts`,
   which otherwise picks `dotnet10`. The 11 SDK builds `net10.0` too. CI installs both SDKs,
   and its `dotnet` then resolves to the newest. Whether the LIBRARY should gain a `net11.0`
   asset is a separate question; .NET 11 consumers get the `net10.0` one meanwhile.
