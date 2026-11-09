@@ -126,7 +126,11 @@ the same day: user `MSBuildSDKsPath` removed, so the versions stay separated by 
   - **C29, C30, H29: this repo's part CLOSED in the cell; the rows stay open.** Each also covers
     repos that have not answered (C29: -go, -jvm, -py, -rs, -v, -zig), and the 🔒 ledger rule
     keeps a multi-recipient row open while any recipient is. Their creators (loader-js, S3D,
-    the workspace) close them.
+    the workspace) close them. **H29: CLOSED by the workspace 2026-11-08** (every port answered;
+    re-read 2026-11-09). C29 and C30 are still open.
+  - **Open on this repo's side of the ledger (2026-11-09):** C42 (scripts back on Bun; the
+    workspace's Tooling row to update) and the H30 / H31 / H32 / C34 cells, all awaiting the
+    workspace's or the creators' read.
   - Older rows answered here (`3e58efc`, 2026-10-26) and still open on the creator's side: H6,
     H15, H22, H25, H27, H28, C8 (not part of the "noted" items; untouched).
   - C16 was closed by this repo (its creator) on 2026-11-07.
