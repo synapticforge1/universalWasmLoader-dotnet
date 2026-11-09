@@ -5,8 +5,8 @@ belong to the workspace session are listed only while not yet done there.
 
 ## Where things stand (2026-11-09)
 
-- **Released and green:** **0.2.1 on nuget.org** (2026-11-09; SPEC 4.0.0, .NET 10 only; tag
-  `v0.2.1` = `62386be`; 0.2.0 = `25a3d10` before it), released by tag push through the
+- **Released and green:** **0.2.2 on nuget.org** (2026-11-09; SPEC 4.0.0, .NET 10 only; tag
+  `v0.2.2` = `610b7f8`; 0.2.1 = `62386be`, 0.2.0 = `25a3d10` before it), released by tag push through the
   three-job `publish.yml` (hash-pinned actions, the OIDC credential in the `publish` job only,
   the GitHub Release made through the REST API). Scripts are Bun TypeScript (`bun scripts/*.ts`;
   Bun pinned by sha256 in CI). **.NET 11 rc.3 is tested ahead of GA** (`b3941b2`; CI job
@@ -53,13 +53,13 @@ belong to the workspace session are listed only while not yet done there.
   refusals; the same three mutants caught). Then the rest (owner: "move the other scripts to
   bun"): `e047771`, port proven ([working-rules.md](working-rules.md) → "Committed scripts").
   `dotnet-tools.json` removed; CI installs Bun by hand, pinned by sha256, in every job that needs
-  it. Next: the release (0.2.2) that is the first real run of the Bun release job.
+  it. **0.2.2 RELEASED** (run 42662957260 green; nuget.org lists 0.2.2; Release `v0.2.2` by `github-actions[bot]` with the nuget.org link and both assets): the Bun release job proven.
 
 ## Waiting on the owner
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
-  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` 2026-11-08 and `v0.2.1` 2026-11-09 added since, also post-purge), no LFS; old commits still served by hash (e.g.
+  `v0.1.0` + `v0.1.1` only (all post-purge; `v0.2.0` 2026-11-08, `v0.2.1` and `v0.2.2` 2026-11-09 added since, also post-purge), no LFS; old commits still served by hash (e.g.
   `f81cb55`, `f1623bd`). The request lists the 29 orphaned commits that were ever on GitHub (9
   before purge 1, 20 between the purges; full ids from the private bundles in the workspace's
   `cmem/local/backups/`) and gives `1588c76` / `0698e13` as the first changed commits (filter-branch

@@ -11,8 +11,8 @@ reference JS/TS loader and the Go/Rust/Python ports; conforms to the cross-langu
 - **Language / runtime:** C# on .NET, built on **Wasmtime** (NuGet `Wasmtime`, the Bytecode Alliance
   wasmtime-dotnet binding). **Namespace:** `UniversalWasmLoader`; **PackageId:** `UniversalWasmLoader`.
 - **Distribution:** **NuGet** (`dotnet add package UniversalWasmLoader`). **Published: 0.1.0
-  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0, net8.0 + net10.0; 0.2.0 (2026-11-08)
-  and 0.2.1 (2026-11-09), SPEC 4.0.0, net10.0 only.**
+  (2026-06-24) and 0.1.1 (2026-10-22), both SPEC 3.0.0, net8.0 + net10.0; 0.2.0 (2026-11-08),
+  0.2.1 and 0.2.2 (2026-11-09), SPEC 4.0.0, net10.0 only.**
 
 ## Repository home — `synapticforge1` organization (recorded 2026-10-20)
 
@@ -331,6 +331,18 @@ a future add (not required for SPEC §7 conformance).
   Release `v0.2.1` by `github-actions[bot]`, both assets attached. The library is unchanged since
   0.2.0: this release carried the H30 release path (REST API, no GitHub CLI), and its run is that
   path's first real proof.
+- ✅ **0.2.2 PUBLISHED 2026-11-09** (owner: "yes, push, move the other scripts to bun, then update
+  the project memory files, commit, push then release"). The first release with every script on
+  Bun. `validate` was green on the parent `86977fe` (run 42662570794), the first CI run of the
+  pinned Bun install. `bun scripts/compat.ts bump patch` at floor patch (v0.2.1's tests 59/59;
+  only `<Version>` changed) → release commit `610b7f8` = tag `v0.2.2` = `origin/main`
+  (`ls-remote`); `bun scripts/compat.ts release` passed on the tagged HEAD; the H30 check read 0
+  hits at the tag. `publish.yml` run **42662957260**: `checks` (pinned Bun, every script) /
+  `publish` / `release` (`github-release.ts` on pinned Bun, no .NET) all `success`. Read back:
+  nuget.org listed 0.2.2 about 6 minutes after the run (nuspec: `net10.0`, commit `610b7f8`).
+  GitHub Release `v0.2.2` was made by `github-actions[bot]`, with the nuget.org link on top of
+  the generated notes and both assets (`uploaded`). That is the first real run of H32's full
+  order and of the Bun release job. The library is unchanged since 0.2.0.
 - **Releasing goes through the compatibility gate** ([compat-gate.md](compat-gate.md), built
   2026-10-22): `bun scripts/compat.ts bump <patch|minor|major>` sets `<Version>` (refusing below the
   SemVer floor), then commit, tag `v<ver>`, push both; `publish.yml` re-runs the gate on the tag
