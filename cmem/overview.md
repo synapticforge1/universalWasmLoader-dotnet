@@ -226,8 +226,8 @@ a future add (not required for SPEC §7 conformance).
   PublicAPI analyzer (build-time only), tracked `tests/`, CI `validate`, and the new `RepositoryUrl`.
   **Tagged `v0.1.1` → `7451a46` and pushed 2026-10-22** (owner: "all of them"), after `bun
   scripts/compat.ts release` passed locally on the tagged HEAD (floor patch). **The GitHub Release
-  is NOT published yet:** `gh` is not authenticated on this machine (no `GH_TOKEN`), so the owner
-  publishes it (web UI: Releases → Draft a new release → tag `v0.1.1` → Publish). Publishing runs
+  is NOT published yet:** publishing a Release on GitHub's web UI is an owner item (web UI:
+  Releases → Draft a new release → tag `v0.1.1` → Publish). Publishing runs
   `publish.yml`: tests, self-test, the release gate, then pack + push 0.1.1 to nuget.org.
 - ✅ **0.1.1 PUBLISHED to nuget.org 2026-10-22** — run 39821337557 attempt 3 (re-run after the
   owner fixed the trusted-publishing policy on nuget.org; details of the fix are the owner's):
@@ -265,16 +265,24 @@ a future add (not required for SPEC §7 conformance).
   flow: `dotnet10 tool run dotnet-script scripts/compat.csx -- bump <kind>`, commit, `git tag vX.Y.Z`, push the commit and the
   tag. Pushing the tag runs `publish.yml`, which publishes to nuget.org and then creates the
   GitHub Release itself. Before this, the workflow ran on a published GitHub Release, so pushing
-  `v0.2.0` alone published nothing, and nobody here could create the Release (`gh` is not
-  installed).
+  `v0.2.0` alone published nothing; the Release page was an owner item on the web UI.
 - **`publish.yml` jobs (C30, owner's "yes", 2026-11-07; first split `338e003`).** `checks`
   (`contents: read`, no `id-token`): the run must be for a tag at this commit; then fixtures, the
   .NET-line check, tests, self-test, the release gate, restore / build / pack. It uploads
   `out/*.nupkg` + `*.snupkg` as the `nupkg` artifact. `publish` (`id-token: write` only): checks
   the tag is still at `github.sha` with `git ls-remote`, downloads the artifact, sets up the SDK,
   runs `NuGet/login` and `dotnet nuget push`. It has no checkout and runs no package code.
-  `release` (`contents: write` only, after a successful push): the same tag check, then
-  `gh release create <tag> out/* --generate-notes --verify-tag`. Every `uses:` in both workflows
+  `release` (`contents: write` only, after a successful push): the same tag check FIRST, then a
+  credential-less checkout of the tag, the SDK, `dotnet tool restore` and **`scripts/github-
+  release.csx`**: GitHub's REST API with the job's `GITHUB_TOKEN`, .NET base library only. It
+  creates the Release with generated notes, or keeps an existing one (a re-run), and uploads only
+  the missing `.nupkg` / `.snupkg`. **Since 2026-11-09 (workspace letter H30, owner: no `gh`, in
+  CI too)**; until then it was `gh release create <tag> out/* --generate-notes --verify-tag`.
+  The REST API creates a missing tag at the default branch where `gh`'s `--verify-tag` refused,
+  so the tag check must stay the job's first step. Proven so far by `selftest` (8/8, also in
+  `validate`) and dry runs against the real API: `v0.2.0` exists with both assets → nothing to
+  do; `v9.9.9` → would create + upload both; one asset missing → only that one; a bad tag or a
+  missing token refused. **Its first real run is the next release.** Every `uses:` in both workflows
   is pinned to a commit hash (each checked to be a commit through the GitHub API).
   `workflow_dispatch` on a branch fails the tag check by design. No `concurrency:` (C30 (2)).
 - **0.2.0 (SPEC 4.0.0, .NET 10 only) on 2026-11-07** (owner: "yes release 0.2.0", then

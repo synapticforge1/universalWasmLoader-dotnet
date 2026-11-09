@@ -107,8 +107,9 @@ was final; workspace 2.1):
 
 - **`validate.yml` first ran 2026-10-22** on `f608dc0` (run 39820424737, ubuntu-latest): every step
   `success` — Setup Bun, Test, self-test, PublicAPI check. Only the step CONCLUSIONS were read (the
-  public API); the logs' test/self-test COUNTS were not, since downloading logs needs an authenticated
-  `gh` (workspace 1.1: a conclusion is not the count).
+  public API); the logs' test/self-test COUNTS were not: a run's logs need an authenticated
+  download, and reading them on GitHub's web UI is an owner item (workspace 1.1: a conclusion is
+  not the count; no `gh`, workspace letter H30).
 - **`release` first ran in CI 2026-10-22** (`publish.yml`, `workflow_dispatch` on `v0.1.1`, run
   39821337557): Setup Bun, Test, self-test and "Compatibility gate (release)" all `success` (step
   conclusions only, as above). That attempt failed at `NuGet/login@v1` (trusted-publishing policy

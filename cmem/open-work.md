@@ -1,4 +1,4 @@
-# open-work.md — what is still open (2026-11-08)
+# open-work.md — what is still open (2026-11-09)
 
 One line per item; done items are removed (their record lives in the topic file named). Items that
 belong to the workspace session are listed only while not yet done there.
@@ -19,6 +19,16 @@ belong to the workspace session are listed only while not yet done there.
   closed, the rows open for other repos (below).
 - **Next, in order:** (1) .NET 11 GA (Backlog): switch the RC setup to required, as listed
   there. (2) At each session start, re-read the ledger. (3) The owner's purge request (below).
+- **2026-11-09 (owner: "review workspace for items needing this project's attention"):** new
+  rows H30, H31, C34 read. **H30: the `release` job no longer calls `gh`**; it runs
+  `scripts/github-release.csx` (REST API, `GITHUB_TOKEN`, re-runnable). Proven by selftest and
+  dry runs; **its first real run is the next release** (backlog below). H31 recorded (no Bun
+  here). C34 recorded: NuGet's analogue of (1) is already covered, because `dotnet nuget push
+  --skip-duplicate` makes a re-run after a post-upload failure succeed and reach `release`;
+  (2)–(4) are JSR / npm / setup-deno / YAML-test only, so n/a. Found on the way: a local
+  `runtimes.csx` run stalled for over 15 minutes in its fetch of Microsoft's index, and it had no
+  limit of its own. It now has one 30 s limit, request to last byte (`eb6772d`; inverted: an
+  unroutable address with a 3 s limit fails in 3.4 s, naming the URL and the limit).
 
 ## Waiting on the owner
 
@@ -31,6 +41,11 @@ belong to the workspace session are listed only while not yet done there.
   has no filter-repo note). It names neither the personal address nor the removed paths.
 
 ## Backlog
+
+- **The next release proves the H30 change** (2026-11-09): the `release` job's first real run of
+  `scripts/github-release.csx`. Afterwards, read back the Release with the public API (`GET
+  /repos/{repo}/releases/tags/<tag>`: two assets). A re-run of the job must report "already
+  exists" / "already attached".
 
 - **Set up AHEAD of GA (2026-11-08, owner: "setup the .NET 11 tests using the RC3 installed"):**
   the test project adds `net11.0` only when built with SDK 11+. `_UwlSdkMajor` is derived from

@@ -66,6 +66,18 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   may be PowerShell, bash, Bun or anything else that fits**, in the session scratchpad, still
   WRITTEN with `Write` (never a heredoc); ported to `.csx` before it is committed.
 - **No committed shell scripts.** CI YAML `run:` steps only launch commands.
+- 🔒 **No `gh`, in CI too** (workspace Tooling rule 9, letter H30; owner, 2026-11-08: "it has been
+  found to be more complicated to use than it is worth", "yes change those"). Check the repo
+  instead: `git ls-remote origin`, `git fetch`, the repo's files, a registry's public API
+  (nuget.org's flat-container), GitHub's public REST API for public data. A task only GitHub's
+  web UI can do (a Release page by hand, run logs, a Support request) is an OWNER item. Never
+  write "blocked on gh". In workflows, GitHub's REST API with the job's `GITHUB_TOKEN`, from this
+  repo's script mechanism: the `release` job runs `scripts/github-release.csx` (2026-11-09;
+  [overview.md](overview.md) → "Build / release flow").
+- **Bun versions (workspace Tooling rule 10, letter H31, owner 2026-11-09): record-only here.**
+  This repo runs no Bun since 2026-11-08 (scripts are `.csx`; CI has no `setup-bun`), so it has
+  no Bun pin to move. A dated measurement that names a Bun version stays as it was measured. If
+  Bun ever returns, every notation is the latest installed Bun.
 - **`.csx` needs no csproj exclusion:** the SDK compiles only `.cs`.
 - **Use `dotnet10`, never bare `dotnet`** (owner, 2026-10-22; reason restated by the owner
   2026-11-08): on the development machine bare `dotnet` is .NET 8, kept because installed
