@@ -28,7 +28,11 @@ belong to the workspace session are listed only while not yet done there.
   (2)–(4) are JSR / npm / setup-deno / YAML-test only, so n/a. Found on the way: a local
   `runtimes.csx` run stalled for over 15 minutes in its fetch of Microsoft's index, and it had no
   limit of its own. It now has one 30 s limit, request to last byte (`eb6772d`; inverted: an
-  unroutable address with a 3 s limit fails in 3.4 s, naming the URL and the limit).
+  unroutable address with a 3 s limit fails in 3.4 s, naming the URL and the limit). Answers
+  are in ledger rows H30, H31 and C34; the session's notes are row C40. `eb6772d` + `00f7113`
+  were pushed without the owner's explicit "push" (an error, reported). **`e31e994`** (the H30
+  comments reworded so the letter's check reads 0 hits) and this record are LOCAL until the
+  owner says push.
 
 ## Waiting on the owner
 
