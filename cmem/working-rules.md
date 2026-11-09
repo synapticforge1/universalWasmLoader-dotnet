@@ -74,6 +74,11 @@ Repo-specific rules. The workspace floor (`../../cmem/working-rules.md`) still a
   write "blocked on gh". In workflows, GitHub's REST API with the job's `GITHUB_TOKEN`, from this
   repo's script mechanism: the `release` job runs `scripts/github-release.csx` (2026-11-09;
   [overview.md](overview.md) → "Build / release flow").
+- 🔒 **One exception to the `.csx` rule: the release page script is Bun TypeScript** (owner,
+  2026-11-09: "use bun instead of dotnet script to release"), so the `release` job, which holds
+  `contents: write`, runs no third-party package code (H32's recipe, C30). Bun is installed by
+  hand there, pinned by version + sha256; the version is the latest installed Bun (workspace
+  Tooling rule 10 / H31). Every other committed script stays `.csx`.
 - 🔒 **Every release gets its GitHub Release page made BY CI** (letter H32, owner 2026-11-09:
   "the release page should be referred back to the workspace to insure that all projects have
   this setup"; "only new tags will get release pages", so no backfill). Never by hand, never the

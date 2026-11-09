@@ -61,6 +61,12 @@ belong to the workspace session are listed only while not yet done there.
   (d) let the job fetch the one script by `github.sha` and run it with `(b)`, no checkout
   (loader-py's shape).
   Recommendation: (b) or (d). They need no third-party code and no Bun.
+  **DECIDED, owner 2026-11-09: (c), "use bun instead of dotnet script to release".** The release
+  page script becomes Bun TypeScript (`scripts/github-release.ts`). The `release` job installs
+  Bun by hand, pinned by version + sha256 (no `uses:` for it, no `dotnet-script`, no NuGet
+  restore beside the write token), as loader-c does. It ports `github-release.csx` under the
+  workspace port rule (an output diff before the `.csx` goes). In progress: see "Where things
+  stand".
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +
