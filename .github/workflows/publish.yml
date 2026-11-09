@@ -13,7 +13,8 @@ name: Publish to NuGet
 # the packed files on as an artifact. `publish` is the only job with `id-token: write`; it runs no
 # package code: it checks the tag, downloads the artifact, logs in and pushes. `release` (only
 # `contents: write`, after a successful push) creates the GitHub Release with the packages attached,
-# through GitHub's REST API (`scripts/github-release.csx`; not the GitHub CLI, workspace letter H30).
+# through GitHub's REST API (`scripts/github-release.ts`, Bun installed by hand and pinned by sha256;
+# not the GitHub CLI, workspace letter H30; letter H32's order).
 # Every `uses:` is pinned to a commit hash (the tag it was resolved from is in the comment).
 # No `concurrency:` on purpose (workspace C30 (2)): a cancelled run could stop after the push to
 # nuget.org and before the Release; every job re-checks the tag instead.
@@ -22,6 +23,13 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+
+# The latest installed Bun (workspace Tooling rule 10, letter H31), for the release job's script.
+# BUN_SHA256 is bun-linux-x64.zip's sha256 from that Bun release's SHASUMS256.txt (re-derived
+# 2026-11-09 by downloading and hashing the zip). Move both together, here and in validate.yml.
+env:
+  BUN_VERSION: "1.4.4"
+  BUN_SHA256: bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c
 
 jobs:
   checks:
@@ -154,21 +162,25 @@ jobs:
           got="$(git ls-remote "https://github.com/$REPO" "refs/tags/$TAG" "refs/tags/$TAG^{}" | tail -n 1 | cut -f 1)"
           test "$got" = "$SHA" || { echo "::error::tag $TAG is at '$got', not $SHA"; exit 1; }
 
-      # The tagged commit's scripts/github-release.csx and dotnet-tools.json; no credentials kept.
-      - name: Checkout
+      # Only the tagged commit's scripts/github-release.ts (sparse), no credentials kept: nothing
+      # beside the write token but that script and Bun.
+      - name: Checkout the release script
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          sparse-checkout: scripts/github-release.ts
+          sparse-checkout-cone-mode: false
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
-        with:
-          dotnet-version: 10.0.x
-
-      # dotnet-script 2.0.1, pinned in dotnet-tools.json (a NuGet version is immutable). The script
-      # itself references no packages: GitHub's REST API through the .NET base library only.
-      - name: Restore the script runner
-        run: dotnet tool restore
+      # Bun by hand, pinned by sha256 (owner, 2026-11-09: "use bun instead of dotnet script to
+      # release"): no third-party action and no package restore beside `contents: write` (H32, C30).
+      - name: Install Bun (pinned by sha256)
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 120 --retry 2 -o bun.zip "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
+          echo "${BUN_SHA256}  bun.zip" | sha256sum -c -
+          unzip -q bun.zip && mkdir -p "$HOME/.bun/bin" && mv bun-linux-x64/bun "$HOME/.bun/bin/" && rm -rf bun.zip bun-linux-x64
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+          "$HOME/.bun/bin/bun" --version
 
       - name: Download the package
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -184,4 +196,4 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
-        run: dotnet tool run dotnet-script scripts/github-release.csx -- "$TAG" "$SHA" out
+        run: bun scripts/github-release.ts "$TAG" "$SHA" out

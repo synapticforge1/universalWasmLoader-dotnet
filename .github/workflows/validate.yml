@@ -8,6 +8,11 @@ on:
   push:
   pull_request:
 
+# Bun for the release page script's self-test: the same pin as publish.yml (move both together).
+env:
+  BUN_VERSION: "1.4.4"
+  BUN_SHA256: bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -46,9 +51,19 @@ jobs:
       - name: PublicAPI files match the code
         run: dotnet tool run dotnet-script scripts/compat.csx -- surface --check
 
-      # The release job's REST client (not the GitHub CLI, workspace letter H30): its pure parts on every push.
+      # The release job's page script (Bun TypeScript, owner 2026-11-09; letters H30 / H32): its
+      # mock-API self-test on every push, with Bun installed the same way the release job does it.
+      - name: Install Bun (pinned by sha256)
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 120 --retry 2 -o bun.zip "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
+          echo "${BUN_SHA256}  bun.zip" | sha256sum -c -
+          unzip -q bun.zip && mkdir -p "$HOME/.bun/bin" && mv bun-linux-x64/bun "$HOME/.bun/bin/" && rm -rf bun.zip bun-linux-x64
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+          "$HOME/.bun/bin/bun" --version
+
       - name: GitHub Release script self-test
-        run: dotnet tool run dotnet-script scripts/github-release.csx -- selftest
+        run: bun scripts/github-release.ts selftest
 
   # .NET 11 ahead of its GA (owner, 2026-11-08: "setup the .NET 11 tests using the RC3
   # installed"). Its own job, so nothing else ever runs on a preview SDK. With SDK 11 present the
