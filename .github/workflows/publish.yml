@@ -2,8 +2,8 @@ name: Publish to NuGet
 
 # Publishes the package via NuGet Trusted Publishing (OIDC) — no API keys stored.
 # Triggers when a `v*` tag is pushed (owner, 2026-11-07: "option 2", the loader-dart shape), or
-# manually from the Actions tab ON A TAG. A release is therefore: `dotnet10 tool run dotnet-script
-# scripts/compat.csx -- bump <kind>`, commit, `git tag vX.Y.Z`, push the commit and the tag. The
+# manually from the Actions tab ON A TAG. A release is therefore: `bun scripts/compat.ts bump
+# <kind>`, commit, `git tag vX.Y.Z`, push the commit and the tag. The
 # last job creates the GitHub Release; nobody drafts one by hand.
 #
 # Two jobs, on purpose (workspace C30, owner 2026-11-07): an `id-token: write` job's every step can
@@ -24,7 +24,7 @@ on:
       - "v*"
   workflow_dispatch:
 
-# The latest installed Bun (workspace Tooling rule 10, letter H31), for the release job's script.
+# The latest installed Bun (workspace Tooling rule 10, letter H31), for the repo's Bun scripts.
 # BUN_SHA256 is bun-linux-x64.zip's sha256 from that Bun release's SHASUMS256.txt (re-derived
 # 2026-11-09 by downloading and hashing the zip). Move both together, here and in validate.yml.
 env:
@@ -57,26 +57,31 @@ jobs:
           dotnet-version: |
             10.0.x
 
-      # The repo's scripts are C# scripts run by dotnet-script, pinned in dotnet-tools.json. It
-      # restores from nuget.org here, in the job that holds no publishing credential.
-      - name: Restore the script runner
-        run: dotnet tool restore
+      # The repo's scripts are Bun TypeScript (owner, 2026-11-09), Bun installed by hand, pinned.
+      - name: Install Bun (pinned by sha256)
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 120 --retry 2 -o bun.zip "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
+          echo "${BUN_SHA256}  bun.zip" | sha256sum -c -
+          unzip -q bun.zip && mkdir -p "$HOME/.bun/bin" && mv bun-linux-x64/bun "$HOME/.bun/bin/" && rm -rf bun.zip bun-linux-x64
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+          "$HOME/.bun/bin/bun" --version
 
       - name: Fixtures match the stamp
-        run: dotnet tool run dotnet-script scripts/fixtures.csx
+        run: bun scripts/fixtures.ts
 
       - name: Every supported .NET line is covered
-        run: dotnet tool run dotnet-script scripts/runtimes.csx
+        run: bun scripts/runtimes.ts
 
       - name: Test (every target framework)
         run: dotnet test tests
 
       - name: Compatibility gate self-test
-        run: dotnet tool run dotnet-script scripts/compat.csx -- selftest
+        run: bun scripts/compat.ts selftest
 
       # Blocking: version line = tag, PublicAPI floor vs the previous tag, previous tag's tests.
       - name: Compatibility gate (release)
-        run: dotnet tool run dotnet-script scripts/compat.csx -- release
+        run: bun scripts/compat.ts release
 
       - name: Restore
         run: dotnet restore UniversalWasmLoader.csproj

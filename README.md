@@ -140,10 +140,9 @@ This runs the suite once per target framework of the test project (today `net10.
 a .NET 11 SDK (the release candidate until .NET 11 ships), the test project also targets
 `net11.0`, so `dotnet test tests -f net11.0` runs the suite on .NET 11. CI does that in its own
 job.
-`dotnet tool run dotnet-script scripts/runtimes.csx` checks that every required .NET line is a
-test target and is installed by each CI job that runs the tests. The repo's scripts are C# scripts
-(`scripts/*.csx`) run by [dotnet-script](https://github.com/dotnet-script/dotnet-script), pinned
-as a local tool in `dotnet-tools.json`; run `dotnet tool restore` once.
+`bun scripts/runtimes.ts` checks that every required .NET line is a test target and is installed
+by each CI job that runs the tests. The repo's scripts (`scripts/*.ts`) run on
+[Bun](https://bun.sh).
 
 The suite covers the cross-language SPEC §8 fixtures (`tests/LoaderTests.cs`): numeric round-trip,
 bool normalization, string params/returns (Canonical ABI) and host import callbacks, plus `Bind`,
@@ -155,7 +154,7 @@ requests. The fixtures are the stamped reference set from `universalWasmLoader-j
 ## Versioning
 
 [SemVer](https://semver.org/). Every release passes a compatibility gate
-(`dotnet tool run dotnet-script scripts/compat.csx -- report`): the public API is declared in
+(`bun scripts/compat.ts report`): the public API is declared in
 `PublicAPI.Shipped.txt` /
 `PublicAPI.Unshipped.txt` (enforced at build time by `Microsoft.CodeAnalysis.PublicApiAnalyzers`),
 a removed or changed member forces a major version, an added one at least a minor, and the previous

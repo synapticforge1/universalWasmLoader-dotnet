@@ -2,7 +2,7 @@
 // never the GitHub CLI (workspace letter H30), never by hand (letter H32, owner 2026-11-09: every
 // project's release CI makes its page; only NEW tags get one).
 //
-// Bun TypeScript, the one exception to this repo's `.csx` rule (owner, 2026-11-09: "use bun instead
+// Bun TypeScript like the repo's other scripts (owner, 2026-11-09: "use bun instead
 // of dotnet script to release"): the `release` job holds `contents: write`, and with Bun installed
 // by hand (pinned by sha256) and no package dependencies, no third-party package code runs beside
 // that token (H32's recipe, C30). Ported from `github-release.csx`, whose output it reproduces line

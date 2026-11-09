@@ -8,7 +8,7 @@ on:
   push:
   pull_request:
 
-# Bun for the release page script's self-test: the same pin as publish.yml (move both together).
+# Bun for the repo's scripts: the same pin as publish.yml (move both together).
 env:
   BUN_VERSION: "1.4.4"
   BUN_SHA256: bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c
@@ -32,27 +32,8 @@ jobs:
           dotnet-version: |
             10.0.x
 
-      # The repo's scripts are C# scripts run by dotnet-script, pinned in dotnet-tools.json.
-      - name: Restore the script runner
-        run: dotnet tool restore
-
-      - name: Fixtures match the stamp
-        run: dotnet tool run dotnet-script scripts/fixtures.csx
-
-      - name: Every supported .NET line is covered
-        run: dotnet tool run dotnet-script scripts/runtimes.csx && dotnet tool run dotnet-script scripts/runtimes.csx -- selftest
-
-      - name: Test (every target framework)
-        run: dotnet test tests
-
-      - name: Compatibility gate self-test
-        run: dotnet tool run dotnet-script scripts/compat.csx -- selftest
-
-      - name: PublicAPI files match the code
-        run: dotnet tool run dotnet-script scripts/compat.csx -- surface --check
-
-      # The release job's page script (Bun TypeScript, owner 2026-11-09; letters H30 / H32): its
-      # mock-API self-test on every push, with Bun installed the same way the release job does it.
+      # The repo's scripts are Bun TypeScript (owner, 2026-11-09: "move the other scripts to bun").
+      # Bun is installed by hand, pinned by sha256, the same way publish.yml does it.
       - name: Install Bun (pinned by sha256)
         run: |
           set -euo pipefail
@@ -62,6 +43,22 @@ jobs:
           echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
           "$HOME/.bun/bin/bun" --version
 
+      - name: Fixtures match the stamp
+        run: bun scripts/fixtures.ts
+
+      - name: Every supported .NET line is covered
+        run: bun scripts/runtimes.ts && bun scripts/runtimes.ts selftest
+
+      - name: Test (every target framework)
+        run: dotnet test tests
+
+      - name: Compatibility gate self-test
+        run: bun scripts/compat.ts selftest
+
+      - name: PublicAPI files match the code
+        run: bun scripts/compat.ts surface --check
+
+      # The release job's page script (letters H30 / H32): its mock-API self-test on every push.
       - name: GitHub Release script self-test
         run: bun scripts/github-release.ts selftest
 
