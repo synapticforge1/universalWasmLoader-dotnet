@@ -46,7 +46,7 @@ jobs:
       - name: PublicAPI files match the code
         run: dotnet tool run dotnet-script scripts/compat.csx -- surface --check
 
-      # The release job's REST client (no `gh`, workspace letter H30): its pure parts on every push.
+      # The release job's REST client (not the GitHub CLI, workspace letter H30): its pure parts on every push.
       - name: GitHub Release script self-test
         run: dotnet tool run dotnet-script scripts/github-release.csx -- selftest
 

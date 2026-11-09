@@ -13,7 +13,7 @@ name: Publish to NuGet
 # the packed files on as an artifact. `publish` is the only job with `id-token: write`; it runs no
 # package code: it checks the tag, downloads the artifact, logs in and pushes. `release` (only
 # `contents: write`, after a successful push) creates the GitHub Release with the packages attached,
-# through GitHub's REST API (`scripts/github-release.csx`; no `gh`, workspace letter H30).
+# through GitHub's REST API (`scripts/github-release.csx`; not the GitHub CLI, workspace letter H30).
 # Every `uses:` is pinned to a commit hash (the tag it was resolved from is in the comment).
 # No `concurrency:` on purpose (workspace C30 (2)): a cancelled run could stop after the push to
 # nuget.org and before the Release; every job re-checks the tag instead.
@@ -142,7 +142,7 @@ jobs:
       contents: write   # only for creating the Release and attaching its assets
 
     steps:
-      # Must stay FIRST: the REST API would create a missing tag at the default branch (`gh`'s
+      # Must stay FIRST: the REST API would create a missing tag at the default branch (the GitHub CLI's
       # --verify-tag refused that), so nothing runs unless the tag exists at this run's commit.
       - name: The tag still points at this commit
         env:
@@ -176,7 +176,7 @@ jobs:
           name: nupkg
           path: out
 
-      # No `gh` (workspace letter H30, owner 2026-11-08). Re-runnable: an existing Release is kept
+      # Not the GitHub CLI (workspace letter H30, owner 2026-11-08). Re-runnable: an existing Release is kept
       # and only missing assets are uploaded.
       - name: Create the GitHub Release
         env:

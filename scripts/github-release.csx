@@ -1,5 +1,5 @@
 // Create the GitHub Release for a tag and attach the packages, through GitHub's REST API with the
-// job's GITHUB_TOKEN. Replaces `gh release create` (workspace letter H30, owner 2026-11-08: no `gh`,
+// job's GITHUB_TOKEN. Replaces the GitHub CLI's `release create` (workspace letter H30, owner 2026-11-08: not the CLI,
 // in CI too). Safe to re-run: an existing Release is kept and only the missing assets are uploaded,
 // so a run that failed after the Release was made can finish (cf. workspace row C34 (1)).
 //
