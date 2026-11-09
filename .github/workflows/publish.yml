@@ -176,10 +176,12 @@ jobs:
           name: nupkg
           path: out
 
-      # Not the GitHub CLI (workspace letter H30, owner 2026-11-08). Re-runnable: an existing Release is kept
-      # and only missing assets are uploaded.
+      # Not the GitHub CLI (workspace letter H30, owner 2026-11-08); letter H32's order: (1) the tag
+      # peels to this commit (checked again inside the script), (2) an existing page = done with no
+      # write, (3) POST with the nuget.org link on top, attach the packages, read back, peel again.
       - name: Create the GitHub Release
         env:
           GITHUB_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: dotnet tool run dotnet-script scripts/github-release.csx -- "$TAG" out
+          SHA: ${{ github.sha }}
+        run: dotnet tool run dotnet-script scripts/github-release.csx -- "$TAG" "$SHA" out
