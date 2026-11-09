@@ -65,8 +65,11 @@ belong to the workspace session are listed only while not yet done there.
   page script becomes Bun TypeScript (`scripts/github-release.ts`). The `release` job installs
   Bun by hand, pinned by version + sha256 (no `uses:` for it, no `dotnet-script`, no NuGet
   restore beside the write token), as loader-c does. It ports `github-release.csx` under the
-  workspace port rule (an output diff before the `.csx` goes). In progress: see "Where things
-  stand".
+  workspace port rule (an output diff before the `.csx` goes). **DONE in `75f8dd1` (local):**
+  the port proven equal (selftest, three real dry runs, five refusals; only the usage line
+  differs, naming its file), the same three mutants caught on the `.ts`, the pinned install
+  rehearsed (a wrong pin exits 1), the `.csx` removed. **Its first real run is the next
+  release.** [overview.md](overview.md) → "Build / release flow".
 
 - **GitHub Support purge request: prepared, not yet submitted** (only the owner can file it, at
   support.github.com). Checked 2026-10-22: 0 forks, 0 pull requests ever, remote refs = `main` +

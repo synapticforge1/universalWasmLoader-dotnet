@@ -272,9 +272,17 @@ a future add (not required for SPEC §7 conformance).
   `out/*.nupkg` + `*.snupkg` as the `nupkg` artifact. `publish` (`id-token: write` only): checks
   the tag is still at `github.sha` with `git ls-remote`, downloads the artifact, sets up the SDK,
   runs `NuGet/login` and `dotnet nuget push`. It has no checkout and runs no package code.
-  `release` (`contents: write` only, after a successful push): the same tag check FIRST, then a
-  credential-less checkout of the tag, the SDK, `dotnet tool restore` and **`scripts/github-
-  release.csx`**: GitHub's REST API with the job's `GITHUB_TOKEN`, .NET base library only. It
+  `release` (`contents: write` only, after a successful push): the same tag check FIRST. **Since
+  `75f8dd1` (2026-11-09, owner: "use bun instead of dotnet script to release"):** a sparse,
+  credential-less checkout of the one script, Bun 1.4.4 downloaded and checked against
+  `BUN_SHA256` (`sha256sum -c`; the pin is in both workflows' `env`, so move them together), the
+  artifact, then **`bun scripts/github-release.ts <tag> <sha> out`**. No .NET, no
+  `dotnet-script`, no package restore beside the write token. The `.ts` ports the `.csx`: identical
+  output and exit codes on the selftest, the real read-only dry runs and five refusals (the usage
+  line names its own file); the same three mutants caught. History of that job, in order: the
+  release job ran `gh` (2026-11-07), then **`scripts/github-
+  release.csx`** (2026-11-09) via the SDK and `dotnet tool restore`: GitHub's REST API with the
+  job's `GITHUB_TOKEN`, .NET base library only. It
   creates the Release with generated notes, or keeps an existing one (a re-run), and uploads only
   the missing `.nupkg` / `.snupkg`. **Since 2026-11-09 (workspace letter H30, owner: no `gh`, in
   CI too)**; until then it was `gh release create <tag> out/* --generate-notes --verify-tag`.
@@ -298,7 +306,7 @@ a future add (not required for SPEC §7 conformance).
   cases), inverted by three mutants (no sha check, no existing-page stop, no time limit), each
   caught only by its own case(s). Read-only dry runs on the real API: `v0.2.1` at `62386be` →
   exists, nothing to do; at `25a3d10` → refused; `v9.9.9` → refused. Its first real run is the
-  next release. Every `uses:` in both workflows
+  next release (now through the Bun `.ts`, above). Every `uses:` in both workflows
   is pinned to a commit hash (each checked to be a commit through the GitHub API).
   `workflow_dispatch` on a branch fails the tag check by design. No `concurrency:` (C30 (2)).
 - **0.2.0 (SPEC 4.0.0, .NET 10 only) on 2026-11-07** (owner: "yes release 0.2.0", then
